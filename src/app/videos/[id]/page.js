@@ -26,6 +26,7 @@ export default function VideoPlayerPage() {
     const [playbackUrl, setPlaybackUrl] = useState(null);
     const [showPurchaseModal, setShowPurchaseModal] = useState(false);
     const [showSubscribeModal, setShowSubscribeModal] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const [userLiked, setUserLiked] = useState(false);
     const [userDisliked, setUserDisliked] = useState(false);
 
@@ -158,15 +159,29 @@ export default function VideoPlayerPage() {
                 setUserLiked(data.video.likedBy?.includes(user?._id) || false);
                 setUserDisliked(data.video.dislikedBy?.includes(user?._id) || false);
 
+                // Check if user is authenticated
+                const isAuthenticated = !!token && !!user;
+
                 // Check if user has access (purchased, subscribed, free, or admin)
                 if (data.canAccess && data.video.videoUrl) {
-                    setPlaybackUrl(data.video.videoUrl);
-                    initializePlayer(data.video.videoUrl);
+                    // For free videos, require authentication
+                    if (!data.video.isPaid && !isAuthenticated) {
+                        setShowLoginModal(true);
+                    } else {
+                        setPlaybackUrl(data.video.videoUrl);
+                        initializePlayer(data.video.videoUrl);
+                    }
                 } else if (data.video.isPaid && !data.canAccess) {
+                    // Show purchase modal for paid videos when user doesn't have access
                     setShowPurchaseModal(true);
                 } else if (!data.video.isPaid && data.video.videoUrl) {
-                    setPlaybackUrl(data.video.videoUrl);
-                    initializePlayer(data.video.videoUrl);
+                    // Free video - check authentication
+                    if (!isAuthenticated) {
+                        setShowLoginModal(true);
+                    } else {
+                        setPlaybackUrl(data.video.videoUrl);
+                        initializePlayer(data.video.videoUrl);
+                    }
                 }
 
                 // Store userId for comments/likes
@@ -354,6 +369,60 @@ export default function VideoPlayerPage() {
                     fetchVideo();
                 }}
             />
+
+            {/* Login Modal for Free Videos */}
+            {showLoginModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 rounded-lg max-w-md w-full p-6 border border-gray-700">
+                        <div className="flex justify-between items-start mb-4">
+                            <h2 className="text-2xl font-bold text-white">Sign In Required</h2>
+                            <button
+                                onClick={() => setShowLoginModal(false)}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="mb-6">
+                            <div className="flex items-center justify-center w-16 h-16 bg-orange-500/10 rounded-full mx-auto mb-4">
+                                <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <p className="text-gray-300 text-center">
+                                Please sign in to your account to watch this video.
+                            </p>
+                            <p className="text-gray-400 text-sm text-center mt-2">
+                                It's free and only takes a minute!
+                            </p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => router.push('/login')}
+                                className="w-full py-3 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-colors"
+                            >
+                                Sign In
+                            </button>
+                            <button
+                                onClick={() => router.push('/register')}
+                                className="w-full py-3 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+                            >
+                                Create Account
+                            </button>
+                            <button
+                                onClick={() => setShowLoginModal(false)}
+                                className="w-full py-2 text-gray-400 hover:text-white transition-colors text-sm"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
