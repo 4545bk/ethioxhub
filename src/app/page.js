@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import VideoCardWithPreview from '@/components/VideoCardWithPreview';
@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import CookieBanner from '@/components/CookieBanner';
 
-export default function HomePage() {
+function HomePageContent() {
     const { t } = useLanguage();
     const searchParams = useSearchParams();
     const searchQuery = searchParams.get('search');
@@ -229,5 +229,14 @@ export default function HomePage() {
             {/* Functional Cookie Consent Banner */}
             <CookieBanner />
         </div>
+    );
+}
+
+// Wrap in Suspense for useSearchParams
+export default function HomePage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="text-foreground">Loading...</div></div>}>
+            <HomePageContent />
+        </Suspense>
     );
 }
