@@ -12,6 +12,9 @@ const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 export const metadata = {
   title: 'EthioxHub - Premium Video Streaming',
   description: 'Stream exclusive VIP content and discover amazing videos',
+  icons: {
+    icon: 'https://res.cloudinary.com/dyztnlzzt/image/upload/v1765613142/ethioxhub_thumbnails/naygoircaypdcaijxsgf.png',
+  },
 };
 
 export default function RootLayout({ children }) {
