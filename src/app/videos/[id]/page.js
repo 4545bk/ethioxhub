@@ -215,7 +215,10 @@ export default function VideoPlayerPage() {
     };
 
     const initializePlayer = (url) => {
-        if (!url || !videoRef.current) return;
+        if (!url || !videoRef.current) {
+            console.error('❌ Cannot initialize player:', { url: !!url, videoRef: !!videoRef.current });
+            return;
+        }
 
         console.log('🎬 Initializing player with URL:', url);
 
@@ -228,6 +231,9 @@ export default function VideoPlayerPage() {
                 hls.attachMedia(videoRef.current);
                 hls.on(Hls.Events.MANIFEST_PARSED, () => {
                     console.log('✅ HLS manifest loaded');
+                });
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    console.error('❌ HLS Error:', data);
                 });
             } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
                 videoRef.current.src = url;
@@ -242,7 +248,20 @@ export default function VideoPlayerPage() {
             });
 
             videoRef.current.addEventListener('error', (e) => {
-                console.error('❌ Video error:', videoRef.current.error);
+                const error = videoRef.current.error;
+                console.error('❌ Video load error:', {
+                    code: error?.code,
+                    message: error?.message,
+                    MEDIA_ERR_ABORTED: error?.code === 1,
+                    MEDIA_ERR_NETWORK: error?.code === 2,
+                    MEDIA_ERR_DECODE: error?.code === 3,
+                    MEDIA_ERR_SRC_NOT_SUPPORTED: error?.code === 4,
+                    videoSrc: videoRef.current?.src
+                });
+            });
+
+            videoRef.current.addEventListener('loadedmetadata', () => {
+                console.log('✅ Video metadata loaded. Duration:', videoRef.current.duration);
             });
         }
     };

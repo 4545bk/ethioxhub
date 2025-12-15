@@ -53,18 +53,22 @@ export async function GET(request, { params }) {
             if (video.provider === 's3' && video.s3Key) {
                 // S3 Signed URL
                 videoUrl = await getS3ViewUrl(video.s3Key);
+                console.log(`[Video API] S3 URL generated for ${params.id}:`, videoUrl ? 'URL created' : 'FAILED');
             } else {
                 // Cloudinary URL handling
                 videoUrl = video.cloudinaryUrl;
+                console.log(`[Video API] Initial cloudinaryUrl for ${params.id}:`, videoUrl || 'NOT SET');
 
                 // Force HTTPS if URL exists but uses HTTP
                 if (videoUrl && videoUrl.startsWith('http://')) {
                     videoUrl = videoUrl.replace('http://', 'https://');
+                    console.log(`[Video API] Upgraded to HTTPS for ${params.id}`);
                 }
 
                 // Fallback: construct from cloudinaryPublicId
                 if (!videoUrl && video.cloudinaryPublicId) {
                     videoUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${video.cloudinaryPublicId}.mp4`;
+                    console.log(`[Video API] Constructed from publicId for ${params.id}:`, videoUrl);
                 }
 
                 // Additional fallback: cloudinaryHlsUrl for streaming
@@ -72,8 +76,16 @@ export async function GET(request, { params }) {
                     videoUrl = video.cloudinaryHlsUrl.startsWith('http://')
                         ? video.cloudinaryHlsUrl.replace('http://', 'https://')
                         : video.cloudinaryHlsUrl;
+                    console.log(`[Video API] Using HLS URL for ${params.id}:`, videoUrl);
                 }
             }
+        }
+
+        // Final URL check
+        if (!videoUrl && canAccess) {
+            console.error(`[Video API] ERROR: No valid video URL found for ${params.id}. Provider: ${video.provider}, cloudinaryUrl: ${!!video.cloudinaryUrl}, cloudinaryPublicId: ${!!video.cloudinaryPublicId}, cloudinaryHlsUrl: ${!!video.cloudinaryHlsUrl}, s3Key: ${!!video.s3Key}`);
+        } else if (videoUrl) {
+            console.log(`[Video API] Final URL for ${params.id}:`, videoUrl.substring(0, 50) + '...');
         }
 
         // Return Data
