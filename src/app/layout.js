@@ -13,7 +13,11 @@ export const metadata = {
   title: 'EthioxHub - Premium Video Streaming',
   description: 'Stream exclusive VIP content and discover amazing videos',
   icons: {
-    icon: 'https://res.cloudinary.com/dyztnlzzt/image/upload/v1765613142/ethioxhub_thumbnails/naygoircaypdcaijxsgf.png',
+    icon: [
+      { url: 'https://res.cloudinary.com/dyztnlzzt/image/upload/v1765613142/ethioxhub_thumbnails/naygoircaypdcaijxsgf.png' },
+    ],
+    shortcut: ['https://res.cloudinary.com/dyztnlzzt/image/upload/v1765613142/ethioxhub_thumbnails/naygoircaypdcaijxsgf.png'],
+    apple: ['https://res.cloudinary.com/dyztnlzzt/image/upload/v1765613142/ethioxhub_thumbnails/naygoircaypdcaijxsgf.png'],
   },
 };
 
