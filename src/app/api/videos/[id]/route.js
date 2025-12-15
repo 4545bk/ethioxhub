@@ -54,10 +54,24 @@ export async function GET(request, { params }) {
                 // S3 Signed URL
                 videoUrl = await getS3ViewUrl(video.s3Key);
             } else {
-                // Cloudinary Fallback
-                videoUrl = video.cloudinaryUrl || video.videoUrl;
+                // Cloudinary URL handling
+                videoUrl = video.cloudinaryUrl;
+
+                // Force HTTPS if URL exists but uses HTTP
+                if (videoUrl && videoUrl.startsWith('http://')) {
+                    videoUrl = videoUrl.replace('http://', 'https://');
+                }
+
+                // Fallback: construct from cloudinaryPublicId
                 if (!videoUrl && video.cloudinaryPublicId) {
                     videoUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${video.cloudinaryPublicId}.mp4`;
+                }
+
+                // Additional fallback: cloudinaryHlsUrl for streaming
+                if (!videoUrl && video.cloudinaryHlsUrl) {
+                    videoUrl = video.cloudinaryHlsUrl.startsWith('http://')
+                        ? video.cloudinaryHlsUrl.replace('http://', 'https://')
+                        : video.cloudinaryHlsUrl;
                 }
             }
         }
