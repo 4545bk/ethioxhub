@@ -49,6 +49,14 @@ export default function VideoPlayerPage() {
         }
     }, [video, user]);
 
+    // Initialize player when playbackUrl and videoRef are ready
+    useEffect(() => {
+        if (playbackUrl && videoRef.current) {
+            console.log('🎯 Both playbackUrl and videoRef ready, initializing player...');
+            initializePlayer(playbackUrl);
+        }
+    }, [playbackUrl, videoRef.current]);
+
     // Auto-resume from continue watching
     useEffect(() => {
         if (videoRef.current && searchParams.get('resume') === 'true') {
@@ -169,7 +177,7 @@ export default function VideoPlayerPage() {
                         setShowLoginModal(true);
                     } else {
                         setPlaybackUrl(data.video.videoUrl);
-                        initializePlayer(data.video.videoUrl);
+                        // Player will be initialized by useEffect when videoRef is ready
                     }
                 } else if (data.video.isPaid && !data.canAccess) {
                     // Show purchase modal for paid videos when user doesn't have access
@@ -180,7 +188,7 @@ export default function VideoPlayerPage() {
                         setShowLoginModal(true);
                     } else {
                         setPlaybackUrl(data.video.videoUrl);
-                        initializePlayer(data.video.videoUrl);
+                        // Player will be initialized by useEffect when videoRef is ready
                     }
                 }
 
