@@ -1,7 +1,7 @@
 /**
  * useVideoPreview Hook
  * Manages video preview URL fetching for hover preview
- * High-performance version with minimal logging
+ * Enhanced to work with ALL videos regardless of storage provider
  */
 
 import { useState, useEffect } from 'react';
@@ -17,84 +17,110 @@ export function useVideoPreview(video) {
             setLoading(true);
 
             try {
+                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dyztnlzzt';
+
                 // Priority 1: If explicit preview URL exists, use it
                 if (video.previewUrl) {
-                    setPreviewUrl(video.previewUrl);
+                    // Ensure HTTPS
+                    const httpsUrl = video.previewUrl.startsWith('http://')
+                        ? video.previewUrl.replace('http://', 'https://')
+                        : video.previewUrl;
+                    setPreviewUrl(httpsUrl);
                     setLoading(false);
                     return;
                 }
 
                 // Priority 2: For Cloudinary videos with publicId, generate optimized preview
-                if (video.provider === 'cloudinary' && video.cloudinaryPublicId) {
-                    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'your-cloud-name';
-                    const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto/${video.cloudinaryPublicId}.mp4`;
+                if (video.cloudinaryPublicId) {
+                    // Create a 5-second preview clip starting from beginning
+                    const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto:low,w_400/${video.cloudinaryPublicId}.mp4`;
                     setPreviewUrl(preview);
                     setLoading(false);
                     return;
                 }
 
-                // Priority 3: For Cloudinary videos with videoUrl (direct transformation URL)
-                if (video.provider === 'cloudinary' && video.videoUrl) {
-                    // Extract public ID from URL if possible and create preview
-                    const urlMatch = video.videoUrl.match(/\/v\d+\/(.+?)\./);
+                // Priority 3: For Cloudinary videos with cloudinaryUrl
+                if (video.cloudinaryUrl) {
+                    // Try to extract public ID from the URL
+                    const urlMatch = video.cloudinaryUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.(mp4|webm|mov)/i);
                     if (urlMatch && urlMatch[1]) {
-                        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'your-cloud-name';
                         const publicId = urlMatch[1];
-                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto/${publicId}.mp4`;
+                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto:low,w_400/${publicId}.mp4`;
                         setPreviewUrl(preview);
                         setLoading(false);
                         return;
                     }
-                    // If extraction fails, use original URL
-                    setPreviewUrl(video.videoUrl);
+
+                    // If extraction fails, use cloudinaryUrl directly (ensure HTTPS)
+                    const httpsUrl = video.cloudinaryUrl.startsWith('http://')
+                        ? video.cloudinaryUrl.replace('http://', 'https://')
+                        : video.cloudinaryUrl;
+                    setPreviewUrl(httpsUrl);
                     setLoading(false);
                     return;
                 }
 
-                // Priority 4: For S3 videos with videoUrl
-                if (video.provider === 's3' && video.videoUrl) {
-                    setPreviewUrl(video.videoUrl);
+                // Priority 4: For Cloudinary HLS URLs
+                if (video.cloudinaryHlsUrl) {
+                    // Convert HLS to preview by extracting public ID
+                    const urlMatch = video.cloudinaryHlsUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.m3u8/i);
+                    if (urlMatch && urlMatch[1]) {
+                        const publicId = urlMatch[1];
+                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto:low,w_400/${publicId}.mp4`;
+                        setPreviewUrl(preview);
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Use HLS URL as fallback (some browsers support it)
+                    const httpsUrl = video.cloudinaryHlsUrl.startsWith('http://')
+                        ? video.cloudinaryHlsUrl.replace('http://', 'https://')
+                        : video.cloudinaryHlsUrl;
+                    setPreviewUrl(httpsUrl);
                     setLoading(false);
                     return;
                 }
 
-                // Priority 5: Fallback to any videoUrl field (for videos without explicit provider)
-                if (video.videoUrl) {
-                    setPreviewUrl(video.videoUrl);
+                // Priority 5: For S3 videos - use thumbnail as preview since S3 doesn't support transformations
+                // (Hover preview on S3 videos will show animated thumbnail effect instead)
+                if (video.provider === 's3') {
+                    // For S3, we'll rely on the thumbnail with CSS animation
+                    // Don't set previewUrl for S3 videos to avoid CORS issues
+                    setPreviewUrl(null);
                     setLoading(false);
                     return;
                 }
 
-                // Priority 6: Check for alternative video fields
-                if (video.url) {
-                    setPreviewUrl(video.url);
-                    setLoading(false);
-                    return;
+                // Priority 6: Default provider (cloudinary) - try to construct URL from any available info
+                if (video.thumbnailUrl && video.thumbnailUrl.includes('cloudinary')) {
+                    // Try to extract public ID from thumbnail URL
+                    const urlMatch = video.thumbnailUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.(jpg|png|webp)/i);
+                    if (urlMatch && urlMatch[1]) {
+                        // Assume video has same public ID as thumbnail
+                        const publicId = urlMatch[1];
+                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto:low,w_400/${publicId}.mp4`;
+                        setPreviewUrl(preview);
+                        setLoading(false);
+                        return;
+                    }
                 }
 
-                // Priority 7: Check cloudinaryUrl field (some videos might use this)
-                if (video.cloudinaryUrl) {
-                    setPreviewUrl(video.cloudinaryUrl);
-                    setLoading(false);
-                    return;
-                }
-
-                // No preview available - only log in development
+                // Last resort: No preview available
                 if (process.env.NODE_ENV === 'development') {
-                    console.warn('[Preview] No URL found for:', video.title?.substring(0, 30));
+                    console.warn('[Preview] No URL found for:', video.title?.substring(0, 30), {
+                        hasPreviewUrl: !!video.previewUrl,
+                        hasCloudinaryId: !!video.cloudinaryPublicId,
+                        hasCloudinaryUrl: !!video.cloudinaryUrl,
+                        hasHlsUrl: !!video.cloudinaryHlsUrl,
+                        provider: video.provider
+                    });
                 }
                 setPreviewUrl(null);
                 setLoading(false);
 
             } catch (error) {
-                // Only log actual errors
                 console.error('[Preview Error]:', error.message);
-                // Last resort fallback
-                if (video.videoUrl || video.url || video.cloudinaryUrl) {
-                    setPreviewUrl(video.videoUrl || video.url || video.cloudinaryUrl);
-                } else {
-                    setPreviewUrl(null);
-                }
+                setPreviewUrl(null);
                 setLoading(false);
             }
         };
