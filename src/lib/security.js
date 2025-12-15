@@ -63,14 +63,15 @@ export async function detectDepositFraud(userId, amount, metadata = {}) {
     try {
         await connectDB();
         const User = (await import('@/models/User')).default;
-        const Deposit = (await import('@/models/Deposit')).default;
+        const Transaction = (await import('@/models/Transaction')).default;
 
         const fraudIndicators = [];
 
         // 1. Check for excessive deposit requests (>3 per hour)
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-        const recentDeposits = await Deposit.countDocuments({
-            userId,
+        const recentDeposits = await Transaction.countDocuments({
+            user: userId,
+            type: 'deposit',
             createdAt: { $gte: oneHourAgo }
         });
 
@@ -85,8 +86,9 @@ export async function detectDepositFraud(userId, amount, metadata = {}) {
 
         // 3. Check for very small amounts repeatedly (<1 ETB)
         if (amount < 100) {
-            const smallDeposits = await Deposit.countDocuments({
-                userId,
+            const smallDeposits = await Transaction.countDocuments({
+                user: userId,
+                type: 'deposit',
                 amount: { $lt: 100 },
                 createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
             });
@@ -96,8 +98,9 @@ export async function detectDepositFraud(userId, amount, metadata = {}) {
         }
 
         // 4. Check for pending deposits (>5 unresolved)
-        const pendingCount = await Deposit.countDocuments({
-            userId,
+        const pendingCount = await Transaction.countDocuments({
+            user: userId,
+            type: 'deposit',
             status: 'pending'
         });
 
