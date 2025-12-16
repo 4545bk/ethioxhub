@@ -13,6 +13,7 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('deposits');
     const [deposits, setDeposits] = useState([]);
     const [videos, setVideos] = useState([]);
+    const [allVideos, setAllVideos] = useState([]); // For "All Videos" tab
     const [analytics, setAnalytics] = useState({
         totalUsers: 0,
         newUsers: 0,
@@ -28,6 +29,10 @@ export default function AdminDashboard() {
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [selectedDepositId, setSelectedDepositId] = useState(null);
+    // Delete video modal state
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [selectedVideoId, setSelectedVideoId] = useState(null);
+    const [selectedVideoTitle, setSelectedVideoTitle] = useState('');
 
     useEffect(() => {
         if (!user) {
@@ -79,6 +84,15 @@ export default function AdminDashboard() {
                 if (res.ok) {
                     const data = await res.json();
                     setVideos(data.videos || []);
+                }
+            } else if (activeTab === 'allVideos') {
+                // Fetch all videos (not just pending)
+                const res = await fetch('/api/videos?limit=100&status=approved', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setAllVideos(data.videos || []);
                 }
             }
         } catch (err) {
@@ -193,6 +207,41 @@ export default function AdminDashboard() {
             }
         } catch (err) {
             alert('Failed to reject video');
+        }
+    };
+
+    const handleDeleteVideo = (videoId, videoTitle) => {
+        setSelectedVideoId(videoId);
+        setSelectedVideoTitle(videoTitle);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDeleteVideo = async () => {
+        if (!selectedVideoId) return;
+
+        const token = localStorage.getItem('accessToken');
+
+        try {
+            const res = await fetch(`/api/admin/videos/${selectedVideoId}/delete`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                fetchData();
+                fetchAnalytics();
+                alert('Video deleted successfully!');
+                setIsDeleteModalOpen(false);
+                setSelectedVideoId(null);
+                setSelectedVideoTitle('');
+            } else {
+                const error = await res.json();
+                alert(error.error || 'Failed to delete video');
+            }
+        } catch (err) {
+            alert('Failed to delete video');
         }
     };
 
