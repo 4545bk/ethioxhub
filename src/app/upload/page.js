@@ -5,8 +5,16 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 
 export default function UploadPage() {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const router = useRouter();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            </div>
+        );
+    }
 
     if (!user) {
         router.push('/login');

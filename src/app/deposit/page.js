@@ -7,7 +7,7 @@ import Navbar from '@/components/Navbar';
 import { motion } from 'framer-motion';
 
 export default function DepositPage() {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const router = useRouter();
     const [amount, setAmount] = useState('');
     const [senderName, setSenderName] = useState('');
@@ -21,10 +21,19 @@ export default function DepositPage() {
 
     // Redirect if not authenticated (client-side only)
     useEffect(() => {
+        if (loading) return; // Wait for auth check
         if (!user) {
             router.push('/login');
         }
-    }, [user, router]);
+    }, [user, loading, router]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            </div>
+        );
+    }
 
     if (!user) {
         return null;

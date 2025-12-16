@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import AdminSidebar from '@/components/AdminSidebar';
 
 export default function AdminDashboard() {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('deposits');
     const [deposits, setDeposits] = useState([]);
@@ -47,6 +47,9 @@ export default function AdminDashboard() {
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
+        // Wait for auth to finish loading before redirecting
+        if (loading) return;
+
         if (!user) {
             router.push('/login');
             return;
@@ -58,7 +61,7 @@ export default function AdminDashboard() {
         fetchData();
         fetchAnalytics();
         fetchCategories();
-    }, [user, activeTab]);
+    }, [user, loading, activeTab]);
 
     const fetchAnalytics = async () => {
         const token = localStorage.getItem('accessToken');
@@ -326,6 +329,14 @@ export default function AdminDashboard() {
             alert('Failed to update video');
         }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     if (!user) return null;
 
