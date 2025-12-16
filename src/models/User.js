@@ -115,6 +115,7 @@ const UserSchema = new mongoose.Schema(
                 default: 'info'
             },
             message: String,
+            link: String,
             read: {
                 type: Boolean,
                 default: false

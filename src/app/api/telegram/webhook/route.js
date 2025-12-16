@@ -155,6 +155,7 @@ async function approveDeposit(transaction, adminUsername) {
         user.notifications.push({
             type: 'success',
             message: `✅ Deposit approved! ${(transaction.amount / 100).toFixed(2)} ETB has been added to your wallet. New balance: ${(user.balance / 100).toFixed(2)} ETB.`,
+            link: '/my-deposits',
             read: false,
             createdAt: new Date()
         });
@@ -215,6 +216,7 @@ async function rejectDeposit(transaction, adminUsername) {
             user.notifications.push({
                 type: 'warning',
                 message: `❌ Deposit rejected. Your deposit of ${(transaction.amount / 100).toFixed(2)} ETB was not approved. Please check your deposit details and try again or contact support.`,
+                link: '/my-deposits',
                 read: false,
                 createdAt: new Date()
             });

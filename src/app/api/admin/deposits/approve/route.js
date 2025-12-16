@@ -113,6 +113,7 @@ export async function POST(request) {
                         notifications: {
                             type: 'success',
                             message: `✅ Deposit approved! ${(transaction.amount / 100).toFixed(2)} ETB has been added to your wallet.`,
+                            link: '/my-deposits',
                             read: false,
                             createdAt: new Date()
                         }

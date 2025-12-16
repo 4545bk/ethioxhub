@@ -140,9 +140,28 @@ export default function NotificationBell() {
                                         href={notification.link}
                                         className="block p-4 hover:bg-gray-800/50 transition-colors border-b border-gray-800/50 last:border-0"
                                     >
-                                        <div className="flex gap-3">
-                                            <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${notification.type === 'rejected' ? 'bg-red-500' : 'bg-green-500'
-                                                }`} />
+                                        <div className="flex gap-3 items-start">
+                                            <div className="mt-1 flex-shrink-0">
+                                                {notification.type === 'success' ? (
+                                                    <div className="w-5 h-5 bg-green-500/10 rounded-full flex items-center justify-center">
+                                                        <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </div>
+                                                ) : notification.type === 'warning' || notification.type === 'rejected' ? (
+                                                    <div className="w-5 h-5 bg-red-500/10 rounded-full flex items-center justify-center">
+                                                        <svg className="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-5 h-5 bg-blue-500/10 rounded-full flex items-center justify-center">
+                                                        <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <div>
                                                 <p className="text-sm text-gray-200">{notification.message}</p>
                                                 <p className="text-xs text-gray-500 mt-1">

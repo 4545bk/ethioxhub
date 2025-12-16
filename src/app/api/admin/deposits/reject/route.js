@@ -94,6 +94,7 @@ export async function POST(request) {
             user.notifications.push({
                 type: 'warning',
                 message: `❌ Deposit rejected. Your deposit of ${(transaction.amount / 100).toFixed(2)} ETB was not approved. Reason: ${adminNote}`,
+                link: '/my-deposits',
                 read: false,
                 createdAt: new Date()
             });
