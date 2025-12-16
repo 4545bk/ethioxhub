@@ -44,6 +44,8 @@ export default function AdminDashboard() {
         isPaid: false,
         price: 0
     });
+    const [thumbnailFile, setThumbnailFile] = useState(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState(null);
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
@@ -283,11 +285,21 @@ export default function AdminDashboard() {
             isPaid: video.isPaid || false,
             price: video.price ? (video.price / 100).toFixed(2) : '0'
         });
+        setThumbnailFile(null);
+        setThumbnailPreview(null);
         setIsEditModalOpen(true);
     };
 
     const handleEditFormChange = (field, value) => {
         setEditForm(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleThumbnailChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setThumbnailFile(file);
+            setThumbnailPreview(URL.createObjectURL(file));
+        }
     };
 
     const confirmEditVideo = async () => {
@@ -297,8 +309,36 @@ export default function AdminDashboard() {
         }
 
         const token = localStorage.getItem('accessToken');
+        let thumbnailUrl = editingVideo.thumbnailUrl; // Keep existing by default
 
         try {
+            // Upload new thumbnail if changed
+            if (thumbnailFile) {
+                // Get upload signature
+                const signRes = await fetch('/api/upload/sign?purpose=thumbnail', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!signRes.ok) throw new Error('Failed to get upload signature');
+                const uploadParams = await signRes.json();
+
+                // Upload to Cloudinary
+                const formData = new FormData();
+                formData.append('file', thumbnailFile);
+                formData.append('signature', uploadParams.signature);
+                formData.append('timestamp', uploadParams.timestamp);
+                formData.append('api_key', uploadParams.apiKey);
+                if (uploadParams.folder) formData.append('folder', uploadParams.folder);
+
+                const uploadRes = await fetch(
+                    `https://api.cloudinary.com/v1_1/${uploadParams.cloudName}/image/upload`,
+                    { method: 'POST', body: formData }
+                );
+                if (!uploadRes.ok) throw new Error('Failed to upload thumbnail');
+                const uploadData = await uploadRes.json();
+                thumbnailUrl = uploadData.secure_url;
+            }
+
+            // Update video with new data
             const res = await fetch(`/api/admin/videos/${editingVideo._id}/edit`, {
                 method: 'PUT',
                 headers: {
@@ -311,7 +351,8 @@ export default function AdminDashboard() {
                     category: editForm.category || null,
                     tags: editForm.tags.split(',').map(t => t.trim()).filter(t => t),
                     isPaid: editForm.isPaid,
-                    price: parseFloat(editForm.price) || 0
+                    price: parseFloat(editForm.price) || 0,
+                    thumbnailUrl: thumbnailUrl
                 }),
             });
 
@@ -321,12 +362,14 @@ export default function AdminDashboard() {
                 alert('Video updated successfully!');
                 setIsEditModalOpen(false);
                 setEditingVideo(null);
+                setThumbnailFile(null);
+                setThumbnailPreview(null);
             } else {
                 const error = await res.json();
                 alert(error.error || 'Failed to update video');
             }
         } catch (err) {
-            alert('Failed to update video');
+            alert('Failed to update video: ' + err.message);
         }
     };
 
@@ -859,6 +902,43 @@ export default function AdminDashboard() {
                                     placeholder="Video description"
                                 />
                                 <p className="text-xs text-gray-400 mt-1">{editForm.description.length}/2000 characters</p>
+                            </div>
+
+                            {/* Thumbnail */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Thumbnail Image
+                                </label>
+                                <div className="flex items-start gap-4">
+                                    {/* Current Thumbnail */}
+                                    <div className="flex-shrink-0">
+                                        <p className="text-xs text-gray-500 mb-1">Current:</p>
+                                        <img
+                                            src={thumbnailPreview || editingVideo.thumbnailUrl}
+                                            alt="Thumbnail"
+                                            className="w-32 h-20 object-cover rounded-lg border border-gray-300"
+                                        />
+                                    </div>
+                                    {/* Upload New */}
+                                    <div className="flex-1">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleThumbnailChange}
+                                            className="hidden"
+                                            id="edit-thumbnail"
+                                        />
+                                        <label
+                                            htmlFor="edit-thumbnail"
+                                            className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+                                        >
+                                            <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                            </svg>
+                                            <p className="text-xs text-gray-500">{thumbnailFile ? thumbnailFile.name : 'Click to change'}</p>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Category */}

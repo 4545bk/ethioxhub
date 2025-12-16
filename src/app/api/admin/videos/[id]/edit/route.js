@@ -28,7 +28,7 @@ export async function PUT(request, { params }) {
 
         // Parse request body
         const body = await request.json();
-        const { title, description, category, tags, isPaid, price } = body;
+        const { title, description, category, tags, isPaid, price, thumbnailUrl } = body;
 
         // Validation
         if (title && title.trim().length === 0) {
@@ -54,6 +54,7 @@ export async function PUT(request, { params }) {
         // Update fields
         if (title !== undefined) video.title = title.trim();
         if (description !== undefined) video.description = description.trim();
+        if (thumbnailUrl !== undefined) video.thumbnailUrl = thumbnailUrl;
 
         // Handle category update
         if (category !== undefined && category !== null) {
