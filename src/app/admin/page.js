@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('deposits');
     const [deposits, setDeposits] = useState([]);
     const [videos, setVideos] = useState([]);
+    const [users, setUsers] = useState([]); // Added users state
     const [allVideos, setAllVideos] = useState([]); // For "All Videos" tab
     const [analytics, setAnalytics] = useState({
         totalUsers: 0,
@@ -109,13 +110,13 @@ export default function AdminDashboard() {
                     const data = await res.json();
                     setDeposits(data.deposits || []);
                 }
-            } else if (activeTab === 'videos') {
-                const res = await fetch('/api/admin/videos/pending', {
+            } else if (activeTab === 'users') {
+                const res = await fetch('/api/admin/users', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setVideos(data.videos || []);
+                    setUsers(data.users || []);
                 }
             } else if (activeTab === 'allVideos') {
                 // Fetch all videos (not just pending)
@@ -291,6 +292,26 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleDeleteUser = async (userId) => {
+        if (!confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
+        const token = localStorage.getItem('accessToken');
+        try {
+            const res = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                toast.success('User deleted successfully');
+                fetchData();
+                fetchAnalytics();
+            } else {
+                toast.error('Failed to delete user');
+            }
+        } catch (err) {
+            toast.error('Error deleting user');
+        }
+    };
+
     const handleEditVideo = (video) => {
         setEditingVideo(video);
         setEditForm({
@@ -453,21 +474,21 @@ export default function AdminDashboard() {
                             </div>
                         </div>
 
-                        {/* Pending Videos Card */}
+                        {/* Manage Users Card */}
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden">
                             <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-orange-50 rounded-full text-orange-600">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                <div className="p-3 bg-purple-50 rounded-full text-purple-600">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                 </div>
                                 <button className="text-gray-400 hover:text-gray-600">⋮</button>
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900">{analytics.pendingVideos}</h3>
-                                <p className="text-gray-500 text-sm font-medium">Videos to Review</p>
+                                <h3 className="text-2xl font-bold text-gray-900">{analytics.totalUsers}</h3>
+                                <p className="text-gray-500 text-sm font-medium">Registered Users</p>
                             </div>
                             <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center text-sm">
-                                <span className="text-orange-600 font-semibold cursor-pointer" onClick={() => setActiveTab('videos')}>Review Now</span>
-                                <span className="text-gray-400 text-xs">Needs approval</span>
+                                <span className="text-purple-600 font-semibold cursor-pointer" onClick={() => setActiveTab('users')}>Manage Users</span>
+                                <span className="text-gray-400 text-xs">View all users</span>
                             </div>
                         </div>
 
@@ -521,7 +542,7 @@ export default function AdminDashboard() {
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-lg font-bold text-gray-900">
                                         {activeTab === 'deposits' ? 'Pending Deposits Requests' :
-                                            activeTab === 'videos' ? 'Pending Video Approvals' :
+                                            activeTab === 'users' ? 'Registered Users' :
                                                 'All Uploaded Videos'}
                                     </h2>
                                     <div className="flex bg-gray-100 p-1 rounded-lg">
@@ -533,11 +554,11 @@ export default function AdminDashboard() {
                                             Deposits ({analytics.pendingDeposits})
                                         </button>
                                         <button
-                                            onClick={() => setActiveTab('videos')}
-                                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'videos' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                            onClick={() => setActiveTab('users')}
+                                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'users' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                                                 }`}
                                         >
-                                            Videos ({analytics.pendingVideos})
+                                            Users
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('allVideos')}
@@ -608,45 +629,44 @@ export default function AdminDashboard() {
                                                     </tr>
                                                 ))}
 
-                                                {activeTab === 'videos' && videos.map((video) => (
-                                                    <tr key={video.id} className="hover:bg-gray-50/50 transition-colors">
+                                                {activeTab === 'users' && users.map((user) => (
+                                                    <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
                                                         <td className="py-4 pl-2">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-16 h-10 bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
-                                                                    <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
+                                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 border border-gray-300 overflow-hidden">
+                                                                    {user.profilePicture ? (
+                                                                        <img src={user.profilePicture} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        user.username?.[0]?.toUpperCase() || 'U'
+                                                                    )}
                                                                 </div>
-                                                                <div className="max-w-[150px]">
-                                                                    <p className="font-semibold text-gray-800 text-sm truncate">{video.title}</p>
+                                                                <div>
+                                                                    <p className="font-semibold text-gray-800 text-sm">{user.username}</p>
+                                                                    <p className="text-xs text-gray-500">{user.email}</p>
                                                                 </div>
                                                             </div>
+                                                        </td>
+                                                        <td className="py-4">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.roles?.includes('admin') ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                                {user.roles?.join(', ') || 'user'}
+                                                            </span>
                                                         </td>
                                                         <td className="py-4">
                                                             <div className="text-sm">
-                                                                <p className="font-medium text-gray-900">{video.owner?.username}</p>
+                                                                <p className="text-gray-900 font-medium">{(user.balance / 100).toFixed(2)} ETB</p>
+                                                                <p className="text-xs text-gray-500">Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
                                                             </div>
                                                         </td>
-                                                        <td className="py-4">
-                                                            {video.isPaid ?
-                                                                <span className="text-xs font-bold text-orange-600">PAID: {(video.price / 100).toFixed(2)}</span> :
-                                                                <span className="text-xs font-bold text-green-600">FREE</span>
-                                                            }
-                                                            <p className="text-xs text-gray-400 mt-1">{video.duration ? Math.floor(video.duration / 60) + 'm' : ''}</p>
-                                                        </td>
-                                                        <td className="py-4 text-right pr-2 space-x-2">
-                                                            <button
-                                                                onClick={() => handleApproveVideo(video.id)}
-                                                                className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors"
-                                                                title="Approve"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleRejectVideo(video.id)}
-                                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                                                                title="Reject"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                            </button>
+                                                        <td className="py-4 text-right pr-2">
+                                                            {!user.roles?.includes('admin') && (
+                                                                <button
+                                                                    onClick={() => handleDeleteUser(user._id)}
+                                                                    className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                                                                    title="Delete User"
+                                                                >
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                </button>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}
