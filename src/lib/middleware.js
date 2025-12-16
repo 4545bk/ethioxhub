@@ -45,7 +45,10 @@ export async function requireAuth(request) {
 
         return user;
     } catch (err) {
-        console.error('Auth error:', err.message);
+        // Don't log expected token expiry errors
+        if (err.message !== 'jwt expired' && err.message !== 'Token expired') {
+            console.error('Auth error:', err.message);
+        }
         return null;
     }
 }

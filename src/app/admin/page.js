@@ -151,13 +151,15 @@ export default function AdminDashboard() {
             if (res.ok) {
                 fetchData();
                 fetchAnalytics();
-                alert('Deposit approved successfully!');
+                toast.success('Deposit approved successfully! ✅');
+                fetchDeposits();
             } else {
                 const error = await res.json();
-                alert(error.error || 'Failed to approve');
+                toast.error(error.error || 'Failed to approve');
             }
-        } catch (err) {
-            alert('Failed to approve deposit');
+        } catch (error) {
+            console.error('Approve error:', error);
+            toast.error('Failed to approve deposit');
         }
     };
 
@@ -186,14 +188,16 @@ export default function AdminDashboard() {
             if (res.ok) {
                 fetchData();
                 fetchAnalytics();
-                alert('Deposit rejected');
                 setIsRejectModalOpen(false);
+                toast.success('Deposit rejected ❌');
+                fetchDeposits();
             } else {
                 const error = await res.json();
-                alert(error.error || 'Failed to reject');
+                toast.error(error.error || 'Failed to reject');
             }
-        } catch (err) {
-            alert('Failed to reject deposit');
+        } catch (error) {
+            console.error('Reject error:', error);
+            toast.error('Failed to reject deposit');
         }
     };
 
@@ -209,10 +213,13 @@ export default function AdminDashboard() {
             if (res.ok) {
                 fetchData();
                 fetchAnalytics();
-                alert('Video approved!');
+                toast.success('Video approved! ✅');
+                fetchVideos();
+            } else {
+                toast.error('Failed to approve video');
             }
         } catch (err) {
-            alert('Failed to approve video');
+            toast.error('Failed to approve video');
         }
     };
 
@@ -235,10 +242,13 @@ export default function AdminDashboard() {
             if (res.ok) {
                 fetchData();
                 fetchAnalytics();
-                alert('Video rejected');
+                toast.success('Video rejected ❌');
+                fetchVideos();
+            } else {
+                toast.error('Failed to reject video');
             }
         } catch (err) {
-            alert('Failed to reject video');
+            toast.error('Failed to reject video');
         }
     };
 
@@ -264,16 +274,20 @@ export default function AdminDashboard() {
             if (res.ok) {
                 fetchData();
                 fetchAnalytics();
-                alert('Video deleted successfully!');
                 setIsDeleteModalOpen(false);
                 setSelectedVideoId(null);
                 setSelectedVideoTitle('');
+                toast.success('Video deleted successfully! 🗑️');
+                // Refresh list
+                if (allVideos.length > 0) fetchAllVideos();
+                if (videos.length > 0) fetchVideos();
             } else {
                 const error = await res.json();
-                alert(error.error || 'Failed to delete video');
+                toast.error(error.error || 'Failed to delete video');
             }
-        } catch (err) {
-            alert('Failed to delete video');
+        } catch (error) {
+            console.error('Delete error:', error);
+            toast.error('Failed to delete video');
         }
     };
 

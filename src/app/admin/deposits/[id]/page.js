@@ -6,9 +6,12 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar'; // Assuming there's a navbar, or we recreate the admin layout
 import Link from 'next/link';
 
+import { useToast } from '@/contexts/ToastContext';
+
 export default function DepositDetailPage({ params }) {
     const { user } = useAuth();
     const router = useRouter();
+    const toast = useToast();
     const { id } = params;
     const [deposit, setDeposit] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -61,14 +64,14 @@ export default function DepositDetailPage({ params }) {
             });
 
             if (res.ok) {
-                alert('Approved successfully');
+                toast.success('Approved successfully ✅');
                 fetchDeposit(); // Refresh
             } else {
                 const data = await res.json();
-                alert(data.error || 'Failed to approve');
+                toast.error(data.error || 'Failed to approve');
             }
         } catch (err) {
-            alert('Error processing request');
+            toast.error('Error processing request');
         }
     };
 
@@ -88,14 +91,14 @@ export default function DepositDetailPage({ params }) {
             });
 
             if (res.ok) {
-                alert('Rejected successfully');
+                toast.success('Rejected successfully ❌');
                 fetchDeposit(); // Refresh
             } else {
                 const data = await res.json();
-                alert(data.error || 'Failed to reject');
+                toast.error(data.error || 'Failed to reject');
             }
         } catch (err) {
-            alert('Error processing request');
+            toast.error('Error processing request');
         }
     };
 
@@ -116,8 +119,8 @@ export default function DepositDetailPage({ params }) {
                     <div className="flex justify-between items-start mb-6">
                         <h1 className="text-2xl font-bold">Deposit Details</h1>
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${deposit.status === 'approved' ? 'bg-success-500/20 text-success-400' :
-                                deposit.status === 'rejected' ? 'bg-error-500/20 text-error-400' :
-                                    'bg-warning-500/20 text-warning-400'
+                            deposit.status === 'rejected' ? 'bg-error-500/20 text-error-400' :
+                                'bg-warning-500/20 text-warning-400'
                             }`}>
                             {deposit.status.toUpperCase()}
                         </span>
