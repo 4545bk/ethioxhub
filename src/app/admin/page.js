@@ -368,7 +368,9 @@ export default function AdminDashboard() {
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-lg font-bold text-gray-900">
-                                        {activeTab === 'deposits' ? 'Pending Deposits Requests' : 'Pending Video Approvals'}
+                                        {activeTab === 'deposits' ? 'Pending Deposits Requests' :
+                                            activeTab === 'videos' ? 'Pending Video Approvals' :
+                                                'All Uploaded Videos'}
                                     </h2>
                                     <div className="flex bg-gray-100 p-1 rounded-lg">
                                         <button
@@ -384,6 +386,13 @@ export default function AdminDashboard() {
                                                 }`}
                                         >
                                             Videos ({analytics.pendingVideos})
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('allVideos')}
+                                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'allVideos' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                                }`}
+                                        >
+                                            All Videos ({analytics.totalVideos})
                                         </button>
                                     </div>
                                 </div>
@@ -490,13 +499,60 @@ export default function AdminDashboard() {
                                                     </tr>
                                                 ))}
 
-                                                {((activeTab === 'deposits' && deposits.length === 0) || (activeTab === 'videos' && videos.length === 0)) && (
-                                                    <tr>
-                                                        <td colSpan="4" className="py-8 text-center text-gray-400 text-sm">
-                                                            No pending items to review.
+                                                {activeTab === 'allVideos' && allVideos.map((video) => (
+                                                    <tr key={video._id} className="hover:bg-gray-50/50 transition-colors">
+                                                        <td className="py-4 pl-2">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-16 h-10 bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
+                                                                    <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
+                                                                </div>
+                                                                <div className="max-w-[150px]">
+                                                                    <p className="font-semibold text-gray-800 text-sm truncate">{video.title}</p>
+                                                                    <p className="text-xs text-gray-400">{video.views || 0} views</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-4">
+                                                            <div className="text-sm">
+                                                                <p className="font-medium text-gray-900">{video.owner?.username}</p>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-4">
+                                                            {video.isPaid ?
+                                                                <span className="text-xs font-bold text-orange-600">PAID: {(video.price / 100).toFixed(2)}</span> :
+                                                                <span className="text-xs font-bold text-green-600">FREE</span>
+                                                            }
+                                                            <p className="text-xs text-gray-400 mt-1">{video.duration ? Math.floor(video.duration / 60) + 'm' : ''}</p>
+                                                        </td>
+                                                        <td className="py-4 text-right pr-2 space-x-2">
+                                                            <Link href={`/videos/${video._id}`}>
+                                                                <button
+                                                                    className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
+                                                                    title="View Video"
+                                                                >
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                                </button>
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => handleDeleteVideo(video._id, video.title)}
+                                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                                                                title="Delete Video"
+                                                            >
+                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            </button>
                                                         </td>
                                                     </tr>
-                                                )}
+                                                ))}
+
+                                                {((activeTab === 'deposits' && deposits.length === 0) ||
+                                                    (activeTab === 'videos' && videos.length === 0) ||
+                                                    (activeTab === 'allVideos' && allVideos.length === 0)) && (
+                                                        <tr>
+                                                            <td colSpan="4" className="py-8 text-center text-gray-400 text-sm">
+                                                                No pending items to review.
+                                                            </td>
+                                                        </tr>
+                                                    )}
                                             </tbody>
                                         </table>
                                     </div>
@@ -620,6 +676,39 @@ export default function AdminDashboard() {
                                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
                             >
                                 Reject Deposit
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Delete Video Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl"
+                    >
+                        <h3 className="text-xl font-bold mb-4 text-gray-900">⚠️ Delete Video</h3>
+                        <p className="text-gray-600 text-sm mb-4">
+                            Are you sure you want to delete <strong>"{selectedVideoTitle}"</strong>?
+                        </p>
+                        <p className="text-red-600 text-xs mb-6">
+                            This action cannot be undone. The video will be permanently deleted from the database and storage.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteVideo}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Delete Permanently
                             </button>
                         </div>
                     </motion.div>
