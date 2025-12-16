@@ -123,9 +123,30 @@ export async function POST(request) {
         await session.abortTransaction();
         session.endSession();
         console.error('Subscribe error:', err);
+        console.error('Error stack:', err.stack);
+
+        let status = 500;
+        let message = 'Failed to process subscription';
+
+        // Handle specific error types
+        if (err.name === 'ValidationError') {
+            status = 400;
+            message = err.message;
+        } else if (err.name === 'MongoError' || err.name === 'MongoServerError') {
+            // MongoDB/transaction specific errors
+            if (err.code === 20) {
+                // Transaction numbers are only allowed on a replica set member or mongos
+                message = 'Database transactions not supported (replica set required)';
+            } else {
+                message = `Database error: ${err.message}`;
+            }
+        } else if (err.message) {
+            message = err.message;
+        }
+
         return NextResponse.json(
-            { error: 'Failed to process subscription', details: err.message },
-            { status: 500 }
+            { error: message, details: process.env.NODE_ENV === 'development' ? err.stack : undefined },
+            { status: status }
         );
     }
 }
