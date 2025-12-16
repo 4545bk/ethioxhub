@@ -210,7 +210,7 @@ async function rejectDeposit(transaction, adminUsername) {
         await transaction.save({ session });
 
         // Add notification to user
-        const user = await User.findById(transaction.user).session(session);
+        const user = await User.findById(transaction.userId).session(session);
         if (user) {
             user.notifications.push({
                 type: 'warning',

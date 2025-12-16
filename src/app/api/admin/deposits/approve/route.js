@@ -104,10 +104,20 @@ export async function POST(request) {
 
             await transaction.save({ session });
 
-            // Update User Balance (Atomic Increment)
+            // Update User Balance AND Add Notification
             const updatedUser = await User.findByIdAndUpdate(
                 transaction.userId,
-                { $inc: { balance: transaction.amount } },
+                {
+                    $inc: { balance: transaction.amount },
+                    $push: {
+                        notifications: {
+                            type: 'success',
+                            message: `✅ Deposit approved! ${(transaction.amount / 100).toFixed(2)} ETB has been added to your wallet.`,
+                            read: false,
+                            createdAt: new Date()
+                        }
+                    }
+                },
                 { new: true, session }
             );
 

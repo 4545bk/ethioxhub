@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Transaction from '@/models/Transaction';
+import User from '@/models/User';
 import AdminLog from '@/models/AdminLog';
 import { requireAdmin, requireAuth } from '@/lib/middleware';
 import { verifyToken } from '@/lib/auth';
@@ -86,6 +87,18 @@ export async function POST(request) {
         transaction.processedAt = new Date();
         transaction.adminNote = adminNote;
         await transaction.save();
+
+        // Update user notification
+        const user = await User.findById(transaction.userId);
+        if (user) {
+            user.notifications.push({
+                type: 'warning',
+                message: `❌ Deposit rejected. Your deposit of ${(transaction.amount / 100).toFixed(2)} ETB was not approved. Reason: ${adminNote}`,
+                read: false,
+                createdAt: new Date()
+            });
+            await user.save();
+        }
 
         // Log admin action
         await AdminLog.create({
