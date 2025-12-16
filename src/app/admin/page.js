@@ -33,6 +33,18 @@ export default function AdminDashboard() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedVideoId, setSelectedVideoId] = useState(null);
     const [selectedVideoTitle, setSelectedVideoTitle] = useState('');
+    // Edit video modal state
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingVideo, setEditingVideo] = useState(null);
+    const [editForm, setEditForm] = useState({
+        title: '',
+        description: '',
+        category: '',
+        tags: '',
+        isPaid: false,
+        price: 0
+    });
+    const [categories, setCategories] = useState([]);
 
     useEffect(() => {
         if (!user) {
@@ -45,6 +57,7 @@ export default function AdminDashboard() {
         }
         fetchData();
         fetchAnalytics();
+        fetchCategories();
     }, [user, activeTab]);
 
     const fetchAnalytics = async () => {
@@ -61,6 +74,18 @@ export default function AdminDashboard() {
             }
         } catch (err) {
             console.error('Failed to fetch analytics:', err);
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const res = await fetch('/api/categories');
+            if (res.ok) {
+                const data = await res.json();
+                setCategories(data.categories || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch categories:', err);
         }
     };
 
@@ -242,6 +267,63 @@ export default function AdminDashboard() {
             }
         } catch (err) {
             alert('Failed to delete video');
+        }
+    };
+
+    const handleEditVideo = (video) => {
+        setEditingVideo(video);
+        setEditForm({
+            title: video.title || '',
+            description: video.description || '',
+            category: video.category?._id || video.category || '',
+            tags: video.tags ? video.tags.join(', ') : '',
+            isPaid: video.isPaid || false,
+            price: video.price ? (video.price / 100).toFixed(2) : '0'
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleEditFormChange = (field, value) => {
+        setEditForm(prev => ({ ...prev, [field]: value }));
+    };
+
+    const confirmEditVideo = async () => {
+        if (!editingVideo || !editForm.title.trim()) {
+            alert('Title is required');
+            return;
+        }
+
+        const token = localStorage.getItem('accessToken');
+
+        try {
+            const res = await fetch(`/api/admin/videos/${editingVideo._id}/edit`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    title: editForm.title.trim(),
+                    description: editForm.description.trim(),
+                    category: editForm.category || null,
+                    tags: editForm.tags.split(',').map(t => t.trim()).filter(t => t),
+                    isPaid: editForm.isPaid,
+                    price: parseFloat(editForm.price) || 0
+                }),
+            });
+
+            if (res.ok) {
+                fetchData();
+                fetchAnalytics();
+                alert('Video updated successfully!');
+                setIsEditModalOpen(false);
+                setEditingVideo(null);
+            } else {
+                const error = await res.json();
+                alert(error.error || 'Failed to update video');
+            }
+        } catch (err) {
+            alert('Failed to update video');
         }
     };
 
@@ -534,6 +616,13 @@ export default function AdminDashboard() {
                                                                 </button>
                                                             </Link>
                                                             <button
+                                                                onClick={() => handleEditVideo(video)}
+                                                                className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors"
+                                                                title="Edit Video"
+                                                            >
+                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                            </button>
+                                                            <button
                                                                 onClick={() => handleDeleteVideo(video._id, video.title)}
                                                                 className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
                                                                 title="Delete Video"
@@ -709,6 +798,137 @@ export default function AdminDashboard() {
                                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
                             >
                                 Delete Permanently
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Edit Video Modal */}
+            {isEditModalOpen && editingVideo && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl my-8"
+                    >
+                        <h3 className="text-xl font-bold mb-4 text-gray-900">✏️ Edit Video</h3>
+                        <p className="text-gray-600 text-sm mb-6">
+                            Editing: <strong>"{editingVideo.title}"</strong>
+                        </p>
+
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Title <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editForm.title}
+                                    onChange={(e) => handleEditFormChange('title', e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                                    maxLength={200}
+                                    placeholder="Video title"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">{editForm.title.length}/200 characters</p>
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Description
+                                </label>
+                                <textarea
+                                    value={editForm.description}
+                                    onChange={(e) => handleEditFormChange('description', e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                                    rows="4"
+                                    maxLength={2000}
+                                    placeholder="Video description"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">{editForm.description.length}/2000 characters</p>
+                            </div>
+
+                            {/* Category */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Category
+                                </label>
+                                <select
+                                    value={editForm.category}
+                                    onChange={(e) => handleEditFormChange('category', e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                                >
+                                    <option value="">No Category</option>
+                                    {categories.map(cat => (
+                                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Tags */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tags <span className="text-gray-400 text-xs">(comma separated, max 10)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editForm.tags}
+                                    onChange={(e) => handleEditFormChange('tags', e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                                    placeholder="e.g. tutorial, programming, javascript"
+                                />
+                            </div>
+
+                            {/* Paid/Free */}
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={editForm.isPaid}
+                                        onChange={(e) => handleEditFormChange('isPaid', e.target.checked)}
+                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">Paid Video</span>
+                                </label>
+                            </div>
+
+                            {/* Price (if paid) */}
+                            {editForm.isPaid && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Price (ETB)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editForm.price}
+                                        onChange={(e) => handleEditFormChange('price', e.target.value)}
+                                        min="0"
+                                        step="0.01"
+                                        className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                            <button
+                                onClick={() => {
+                                    setIsEditModalOpen(false);
+                                    setEditingVideo(null);
+                                }}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmEditVideo}
+                                disabled={!editForm.title.trim()}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                Save Changes
                             </button>
                         </div>
                     </motion.div>
