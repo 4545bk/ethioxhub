@@ -90,6 +90,14 @@ export async function POST(request) {
 
         userDoc.subscriptionExpiresAt = new Date(currentExpiry.getTime() + SUBSCRIPTION_DURATION_DAYS * 24 * 60 * 60 * 1000);
 
+        // Add notification to user
+        userDoc.notifications.push({
+            type: 'success',
+            message: `🎉 Premium subscription activated! Enjoy unlimited access to all content for 30 days. Your subscription expires on ${userDoc.subscriptionExpiresAt.toLocaleDateString()}.`,
+            read: false,
+            createdAt: new Date()
+        });
+
         await userDoc.save({ session });
 
         // Create transaction record
