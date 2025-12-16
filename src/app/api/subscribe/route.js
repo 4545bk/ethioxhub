@@ -94,7 +94,7 @@ export async function POST(request) {
 
         // Create transaction record
         const transaction = await Transaction.create([{
-            user: userId,
+            userId: userId,
             type: 'subscription',
             status: 'approved',
             amount: SUBSCRIPTION_PRICE_CENTS,
