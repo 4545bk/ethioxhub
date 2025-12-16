@@ -5,11 +5,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useToast } from '@/contexts/ToastContext';
 import AdminSidebar from '@/components/AdminSidebar';
 
 export default function AdminDashboard() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
+    const toast = useToast();
     const [activeTab, setActiveTab] = useState('deposits');
     const [deposits, setDeposits] = useState([]);
     const [videos, setVideos] = useState([]);
@@ -304,7 +306,7 @@ export default function AdminDashboard() {
 
     const confirmEditVideo = async () => {
         if (!editingVideo || !editForm.title.trim()) {
-            alert('Title is required');
+            toast.error('Title is required');
             return;
         }
 
@@ -359,17 +361,17 @@ export default function AdminDashboard() {
             if (res.ok) {
                 fetchData();
                 fetchAnalytics();
-                alert('Video updated successfully!');
+                toast.success('Video updated successfully!');
                 setIsEditModalOpen(false);
                 setEditingVideo(null);
                 setThumbnailFile(null);
                 setThumbnailPreview(null);
             } else {
                 const error = await res.json();
-                alert(error.error || 'Failed to update video');
+                toast.error(error.error || 'Failed to update video');
             }
         } catch (err) {
-            alert('Failed to update video: ' + err.message);
+            toast.error('Failed to update video: ' + err.message);
         }
     };
 

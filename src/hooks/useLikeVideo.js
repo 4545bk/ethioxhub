@@ -1,9 +1,5 @@
-/**
- * useLikeVideo Hook
- * Manages video like/dislike interactions with optimistic UI updates
- */
-
 import { useState, useEffect } from 'react';
+import { useToast } from '@/contexts/ToastContext';
 
 export function useLikeVideo(initialState = {}) {
     const [liked, setLiked] = useState(initialState.liked || false);
@@ -11,6 +7,7 @@ export function useLikeVideo(initialState = {}) {
     const [likesCount, setLikesCount] = useState(initialState.likesCount || 0);
     const [dislikesCount, setDislikesCount] = useState(initialState.dislikesCount || 0);
     const [loading, setLoading] = useState(false);
+    const toast = useToast();
 
     // Sync state with props when they change (e.g., when user loads)
     useEffect(() => {
@@ -23,7 +20,7 @@ export function useLikeVideo(initialState = {}) {
     const handleLike = async (videoId) => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            alert('Please login to like videos');
+            toast.info('Please login to like videos');
             return;
         }
 
@@ -57,7 +54,7 @@ export function useLikeVideo(initialState = {}) {
             });
 
             if (response.status === 401) {
-                alert('Session expired. Please login again.');
+                toast.error('Session expired. Please login again.');
                 window.location.href = '/login';
                 return;
             }
@@ -83,7 +80,7 @@ export function useLikeVideo(initialState = {}) {
             setDislikesCount(initialDislikesCount);
 
             if (error.message !== 'Failed to like video') {
-                alert('Failed to like video. Please try again.');
+                toast.error('Failed to like video. Please try again.');
             }
         } finally {
             setLoading(false);
@@ -93,7 +90,7 @@ export function useLikeVideo(initialState = {}) {
     const handleDislike = async (videoId) => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            alert('Please login to dislike videos');
+            toast.info('Please login to dislike videos');
             return;
         }
 
@@ -127,7 +124,7 @@ export function useLikeVideo(initialState = {}) {
             });
 
             if (response.status === 401) {
-                alert('Session expired. Please login again.');
+                toast.error('Session expired. Please login again.');
                 window.location.href = '/login';
                 return;
             }
@@ -153,7 +150,7 @@ export function useLikeVideo(initialState = {}) {
             setDislikesCount(initialDislikesCount);
 
             if (error.message !== 'Failed to dislike video') {
-                alert('Failed to dislike video. Please try again.');
+                toast.error('Failed to dislike video. Please try again.');
             }
         } finally {
             setLoading(false);

@@ -34,11 +34,14 @@ export default function LoginPage() {
         <div className="min-h-screen bg-black flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo */}
+                {/* Logo */}
                 <div className="flex justify-center mb-8">
-                    <h1 className="text-3xl font-bold">
-                        <span className="text-white">Ethiox</span>
-                        <span className="text-orange-500">hub</span>
-                    </h1>
+                    <Link href="/" className="hover:opacity-80 transition-opacity">
+                        <h1 className="text-3xl font-bold">
+                            <span className="text-white">Ethiox</span>
+                            <span className="text-orange-500">hub</span>
+                        </h1>
+                    </Link>
                 </div>
 
                 {/* Card */}

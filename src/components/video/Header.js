@@ -1,4 +1,4 @@
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell, ChevronDown, ArrowLeft } from "lucide-react";
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -26,17 +26,28 @@ const Header = ({ user }) => {
 
     return (
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="flex items-center gap-3 bg-secondary rounded-full px-4 py-2.5 w-full max-w-md hidden sm:flex">
-                <Search className="w-5 h-5 text-muted-foreground" />
-                <input
-                    type="text"
-                    placeholder={t('search')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-foreground text-sm placeholder:text-muted-foreground"
-                />
-            </form>
+            {/* Left: Back Button & Search */}
+            <div className="flex items-center gap-4 flex-1">
+                <button
+                    onClick={() => router.back()}
+                    className="p-2 hover:bg-secondary rounded-full transition-colors"
+                    title="Go Back"
+                >
+                    <ArrowLeft className="w-5 h-5 text-foreground" />
+                </button>
+
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} className="flex items-center gap-3 bg-secondary rounded-full px-4 py-2.5 w-full max-w-md hidden sm:flex">
+                    <Search className="w-5 h-5 text-muted-foreground" />
+                    <input
+                        type="text"
+                        placeholder={t('search')}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="flex-1 bg-transparent border-none outline-none text-foreground text-sm placeholder:text-muted-foreground"
+                    />
+                </form>
+            </div>
 
             {/* Right: Notifications & User Profile */}
             <div className="flex items-center gap-4 ml-auto">

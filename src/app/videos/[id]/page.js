@@ -19,7 +19,7 @@ export default function VideoPlayerPage() {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const videoRef = useRef(null);
     const [video, setVideo] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ export default function VideoPlayerPage() {
 
     useEffect(() => {
         fetchVideo();
-    }, [params.id]);
+    }, [params.id, authLoading]);
 
     // Update like/dislike state when user loads
     useEffect(() => {
@@ -174,18 +174,18 @@ export default function VideoPlayerPage() {
                 if (data.canAccess && data.video.videoUrl) {
                     // For free videos, require authentication
                     if (!data.video.isPaid && !isAuthenticated) {
-                        setShowLoginModal(true);
+                        if (!authLoading) setShowLoginModal(true);
                     } else {
                         setPlaybackUrl(data.video.videoUrl);
                         // Player will be initialized by useEffect when videoRef is ready
                     }
                 } else if (data.video.isPaid && !data.canAccess) {
                     // Show purchase modal for paid videos when user doesn't have access
-                    setShowPurchaseModal(true);
+                    if (!authLoading) setShowPurchaseModal(true);
                 } else if (!data.video.isPaid && data.video.videoUrl) {
                     // Free video - check authentication
                     if (!isAuthenticated) {
-                        setShowLoginModal(true);
+                        if (!authLoading) setShowLoginModal(true);
                     } else {
                         setPlaybackUrl(data.video.videoUrl);
                         // Player will be initialized by useEffect when videoRef is ready
