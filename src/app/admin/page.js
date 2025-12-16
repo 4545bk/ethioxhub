@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import AdminSidebar from '@/components/AdminSidebar';
 
 export default function AdminDashboard() {
-    const { user, loading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('deposits');
     const [deposits, setDeposits] = useState([]);
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         // Wait for auth to finish loading before redirecting
-        if (loading) return;
+        if (authLoading) return;
 
         if (!user) {
             router.push('/login');
@@ -61,7 +61,7 @@ export default function AdminDashboard() {
         fetchData();
         fetchAnalytics();
         fetchCategories();
-    }, [user, loading, activeTab]);
+    }, [user, authLoading, activeTab]);
 
     const fetchAnalytics = async () => {
         const token = localStorage.getItem('accessToken');
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
         }
     };
 
-    if (loading) {
+    if (authLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
