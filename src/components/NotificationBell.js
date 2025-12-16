@@ -25,12 +25,40 @@ export default function NotificationBell() {
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const token = localStorage.getItem('accessToken');
+                let token = localStorage.getItem('accessToken');
                 if (!token) return;
 
-                const res = await fetch('/api/user/notifications', {
+                let res = await fetch('/api/user/notifications', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+
+                // If token expired, try to refresh
+                if (res.status === 401) {
+                    console.log('Access token expired, attempting refresh...');
+                    const refreshToken = localStorage.getItem('refreshToken');
+
+                    if (refreshToken) {
+                        const refreshRes = await fetch('/api/auth/refresh', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ refreshToken })
+                        });
+
+                        if (refreshRes.ok) {
+                            const { accessToken } = await refreshRes.json();
+                            localStorage.setItem('accessToken', accessToken);
+
+                            // Retry with new token
+                            res = await fetch('/api/user/notifications', {
+                                headers: { Authorization: `Bearer ${accessToken}` }
+                            });
+                        } else {
+                            // Refresh failed, user needs to login again
+                            console.error('Token refresh failed');
+                            return;
+                        }
+                    }
+                }
 
                 if (res.ok) {
                     const data = await res.json();
@@ -47,18 +75,6 @@ export default function NotificationBell() {
                     }));
 
                     setNotifications(formatted);
-
-                    // Check if there are any unread
-                    const hasUnreadItems = formatted.some(n => !n.read);
-                    // Also check local storage for 'seen' if needed, but rely on 'read' flag from server ideally.
-                    // For now, simpler: just check unread flag.
-                    // But our server schema has 'read' field.
-
-                    // Since we don't have an API to mark as read yet, implementation of markAsRead 
-                    // will be client-side only visual or we need POST endpoint.
-                    // For MVP, client-side 'hasUnread' state logic:
-                    // If we have items that we haven't 'seen' in this session or strict read check.
-                    // Let's stick to LocalStorage 'seen' logic for persistence without API write for now.
 
                     const seenIds = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
                     const reallyNew = formatted.filter(n => !seenIds.includes(n.id) && !n.read);

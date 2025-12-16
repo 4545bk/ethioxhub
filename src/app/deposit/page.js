@@ -107,7 +107,7 @@ export default function DepositPage() {
             }
 
             setSuccess(true);
-            setTimeout(() => router.push('/'), 3000);
+            setTimeout(() => router.push('/my-deposits'), 3000);
         } catch (err) {
             setError(err.message);
         } finally {
