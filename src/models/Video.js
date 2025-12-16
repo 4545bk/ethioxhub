@@ -164,16 +164,21 @@ const VideoSchema = new mongoose.Schema(
 );
 
 // Pre-save validation hook to enforce provider-specific requirements
+// Pre-save validation hook to enforce provider-specific requirements
 VideoSchema.pre('save', function (next) {
     if (this.provider === 'cloudinary') {
-        if (!this.cloudinaryPublicId) {
+        // Only enforce check if it's a new video or provider/id is being modified
+        // This allows editing legacy videos that might have missing data
+        if (!this.cloudinaryPublicId && (this.isNew || this.isModified('provider') || this.isModified('cloudinaryPublicId'))) {
             return next(new Error('cloudinaryPublicId is required for Cloudinary uploads'));
         }
-        if (!this.cloudinaryUrl) {
+
+        // If it's a new video with cloudinary provider, url is required
+        if (!this.cloudinaryUrl && (this.isNew || this.isModified('provider') || this.isModified('cloudinaryUrl'))) {
             return next(new Error('cloudinaryUrl is required for Cloudinary uploads'));
         }
     } else if (this.provider === 's3') {
-        if (!this.s3Key) {
+        if (!this.s3Key && (this.isNew || this.isModified('provider') || this.isModified('s3Key'))) {
             return next(new Error('s3Key is required for S3 uploads'));
         }
     }

@@ -101,9 +101,26 @@ export async function PUT(request, { params }) {
 
     } catch (error) {
         console.error('Edit video error:', error);
+
+        let status = 500;
+        let message = 'Failed to update video';
+
+        if (error.name === 'ValidationError') {
+            status = 400;
+            message = error.message;
+        } else if (error.name === 'CastError') {
+            status = 400;
+            message = 'Invalid ID format';
+        } else if (error instanceof SyntaxError) {
+            status = 400;
+            message = 'Invalid JSON request body';
+        } else if (error.message) {
+            message = error.message;
+        }
+
         return NextResponse.json(
-            { error: error.message || 'Failed to update video' },
-            { status: 500 }
+            { error: message },
+            { status: status }
         );
     }
 }
