@@ -3,6 +3,7 @@ import './globals.css';
 import { Suspense } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 import Footer from '@/components/Footer';
 import ReferralTracker from '@/components/ReferralTracker';
 
@@ -27,11 +28,13 @@ export default function RootLayout({ children }) {
       <body className={`${inter.variable} ${outfit.variable} font-sans`}>
         <AuthProvider>
           <LanguageProvider>
-            <Suspense fallback={null}>
-              <ReferralTracker />
-            </Suspense>
-            {children}
-            <Footer />
+            <ToastProvider>
+              <Suspense fallback={null}>
+                <ReferralTracker />
+              </Suspense>
+              {children}
+              <Footer />
+            </ToastProvider>
           </LanguageProvider>
         </AuthProvider>
       </body>
