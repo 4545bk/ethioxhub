@@ -10,8 +10,17 @@ import { verifyToken, generateAccessToken } from '@/lib/auth';
 
 export async function POST(request) {
     try {
-        // Get refresh token from cookie
-        const refreshToken = request.cookies.get('refreshToken')?.value;
+        // Get refresh token from cookie or body
+        let refreshToken = request.cookies.get('refreshToken')?.value;
+
+        if (!refreshToken) {
+            try {
+                const body = await request.json();
+                refreshToken = body.refreshToken;
+            } catch (e) {
+                // Ignore json parse error if body is empty
+            }
+        }
 
         if (!refreshToken) {
             return NextResponse.json(
