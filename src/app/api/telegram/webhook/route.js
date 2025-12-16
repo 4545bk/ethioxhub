@@ -151,7 +151,16 @@ async function approveDeposit(transaction, adminUsername) {
         transaction.afterBalance = user.balance;
         await transaction.save({ session });
 
-        // 4. Log admin action
+        // 4. Add notification to user
+        user.notifications.push({
+            type: 'success',
+            message: `✅ Deposit approved! ${(transaction.amount / 100).toFixed(2)} ETB has been added to your wallet. New balance: ${(user.balance / 100).toFixed(2)} ETB.`,
+            read: false,
+            createdAt: new Date()
+        });
+        await user.save({ session });
+
+        // 5. Log admin action
         await AdminLog.create([{
             admin: transaction.user, // Placeholder, should be admin user ID
             action: 'approve_deposit',
@@ -199,6 +208,18 @@ async function rejectDeposit(transaction, adminUsername) {
         transaction.rejectedAt = new Date();
         transaction.rejectionReason = 'Rejected via Telegram';
         await transaction.save({ session });
+
+        // Add notification to user
+        const user = await User.findById(transaction.userId).session(session);
+        if (user) {
+            user.notifications.push({
+                type: 'warning',
+                message: `❌ Deposit rejected. Your deposit of ${(transaction.amount / 100).toFixed(2)} ETB was not approved. Please check your deposit details and try again or contact support.`,
+                read: false,
+                createdAt: new Date()
+            });
+            await user.save({ session });
+        }
 
         await AdminLog.create([{
             admin: transaction.user, // Placeholder
