@@ -5,6 +5,7 @@ import AdminSidebar from '@/components/AdminSidebar';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import SuccessModal from '@/components/SuccessModal';
+import axios from 'axios';
 
 export default function UploadVideoPage() {
     const router = useRouter();
@@ -12,6 +13,7 @@ export default function UploadVideoPage() {
     const [uploading, setUploading] = useState(false);
     const [status, setStatus] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -78,13 +80,14 @@ export default function UploadVideoPage() {
                 const { uploadUrl, publicUrl, key, bucket } = await signRes.json();
 
                 setStatus('Uploading to AWS S3...');
-                const uploadRes = await fetch(uploadUrl, {
-                    method: 'PUT',
-                    body: videoFile,
-                    headers: { 'Content-Type': videoFile.type }
+                await axios.put(uploadUrl, videoFile, {
+                    headers: { 'Content-Type': videoFile.type },
+                    onUploadProgress: (progressEvent) => {
+                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        setUploadProgress(percentCompleted);
+                        setStatus(`Uploading to S3... ${percentCompleted}%`);
+                    }
                 });
-
-                if (!uploadRes.ok) throw new Error('S3 Upload Failed');
 
                 videoData = {
                     provider: 's3',
@@ -108,11 +111,18 @@ export default function UploadVideoPage() {
                 vData.append('signature', vParams.signature);
                 if (vParams.folder) vData.append('folder', vParams.folder);
 
-                const vUpload = await fetch(`https://api.cloudinary.com/v1_1/${vParams.cloudName}/video/upload`, {
-                    method: 'POST', body: vData
-                });
-                if (!vUpload.ok) throw new Error('Video upload failed');
-                const vResult = await vUpload.json();
+                const vUpload = await axios.post(
+                    `https://api.cloudinary.com/v1_1/${vParams.cloudName}/video/upload`,
+                    vData,
+                    {
+                        onUploadProgress: (progressEvent) => {
+                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            setUploadProgress(percentCompleted);
+                            setStatus(`Uploading... ${percentCompleted}%`);
+                        }
+                    }
+                );
+                const vResult = vUpload.data;
 
                 videoData = {
                     provider: 'cloudinary',
@@ -389,10 +399,10 @@ export default function UploadVideoPage() {
                                         }`}
                                 >
                                     {uploading ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-                                            {status}
-                                        </span>
+                                        <div className="flex items-center justify-center gap-3">
+                                            <CircularProgress progress={uploadProgress} size={32} />
+                                            <span className="text-lg font-medium">{status}</span>
+                                        </div>
                                     ) : 'Upload Video Now'}
                                 </button>
                             </div>
@@ -411,3 +421,47 @@ export default function UploadVideoPage() {
         </div>
     );
 }
+
+const CircularProgress = ({ progress, size = 32, strokeWidth = 3 }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (progress / 100) * circumference;
+
+    return (
+        <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+            <svg
+                width={size}
+                height={size}
+                viewBox={`0 0 ${size} ${size}`}
+                className="transform -rotate-90"
+            >
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={strokeWidth}
+                    className="text-white opacity-20"
+                />
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={circumference}
+                    strokeDashoffset={offset}
+                    strokeLinecap="round"
+                    className="text-white transition-all duration-200 ease-out"
+                />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-white">
+                    {Math.round(progress)}
+                </span>
+            </div>
+        </div>
+    );
+};
