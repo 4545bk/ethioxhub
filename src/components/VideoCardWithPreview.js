@@ -21,19 +21,20 @@ export default function VideoCardWithPreview({ video }) {
     // Handle preview playback
     useEffect(() => {
         if (showPreview && videoRef.current && previewUrl) {
+            videoRef.current.load(); // Ensure fresh load
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    console.log('Preview playback failed:', error);
-                    // If autoplay fails, we might want to hide the preview or show a play button
-                    // But for hover preview, we usually just fallback to thumbnail
+                    console.log('Preview playback failed for:', video.title?.substring(0, 30), error.message);
+                    // On playback failure, hide the preview and show thumbnail instead
+                    setShowPreview(false);
                 });
             }
         } else if (!showPreview && videoRef.current) {
             videoRef.current.pause();
             videoRef.current.currentTime = 0;
         }
-    }, [showPreview, previewUrl]);
+    }, [showPreview, previewUrl, video.title]);
 
     const handleMouseEnter = () => {
         setIsHovering(true);
@@ -114,6 +115,10 @@ export default function VideoCardWithPreview({ video }) {
                             muted
                             loop
                             playsInline
+                            onError={(e) => {
+                                console.warn('Preview video failed to load:', video.title?.substring(0, 30), previewUrl.substring(0, 60));
+                                setShowPreview(false); // Fallback to thumbnail
+                            }}
                         />
                     )}
 

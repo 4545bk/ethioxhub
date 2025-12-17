@@ -2,6 +2,7 @@
  * useVideoPreview Hook
  * Manages video preview URL fetching for hover preview
  * Enhanced to work with ALL videos regardless of storage provider
+ * Now with comprehensive debugging and error handling
  */
 
 import { useState, useEffect } from 'react';
@@ -9,22 +10,42 @@ import { useState, useEffect } from 'react';
 export function useVideoPreview(video) {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (!video) return;
 
         const fetchPreviewUrl = async () => {
             setLoading(true);
+            setError(null);
 
             try {
                 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dyztnlzzt';
 
+                // Debug logging - only show first time per video
+                const debugKey = `preview_debug_${video._id}`;
+                const hasLogged = typeof window !== 'undefined' && sessionStorage.getItem(debugKey);
+
+                if (!hasLogged && typeof window !== 'undefined') {
+                    console.log('[Preview Debug]', {
+                        title: video.title?.substring(0, 40),
+                        provider: video.provider,
+                        hasPreviewUrl: !!video.previewUrl,
+                        hasCloudinaryPublicId: !!video.cloudinaryPublicId,
+                        hasCloudinaryUrl: !!video.cloudinaryUrl,
+                        hasCloudinaryHlsUrl: !!video.cloudinaryHlsUrl,
+                        hasThumbnailUrl: !!video.thumbnailUrl,
+                        duration: video.duration
+                    });
+                    sessionStorage.setItem(debugKey, 'true');
+                }
+
                 // Priority 1: If explicit preview URL exists, use it
                 if (video.previewUrl) {
-                    // Ensure HTTPS
                     const httpsUrl = video.previewUrl.startsWith('http://')
                         ? video.previewUrl.replace('http://', 'https://')
                         : video.previewUrl;
+                    console.log('[Preview] Using explicit previewUrl:', httpsUrl.substring(0, 60));
                     setPreviewUrl(httpsUrl);
                     setLoading(false);
                     return;
@@ -32,8 +53,10 @@ export function useVideoPreview(video) {
 
                 // Priority 2: For Cloudinary videos with publicId, generate optimized preview
                 if (video.cloudinaryPublicId) {
-                    // Create a 5-second preview clip starting from beginning
-                    const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto:low,w_400/${video.cloudinaryPublicId}.mp4`;
+                    // Adjust preview duration based on video length
+                    const previewDuration = video.duration && video.duration < 5 ? Math.max(2, Math.floor(video.duration)) : 5;
+                    const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_${previewDuration},f_auto,q_auto:low,w_400/${video.cloudinaryPublicId}.mp4`;
+                    console.log('[Preview] Generated from cloudinaryPublicId:', preview.substring(0, 80));
                     setPreviewUrl(preview);
                     setLoading(false);
                     return;
@@ -41,11 +64,13 @@ export function useVideoPreview(video) {
 
                 // Priority 3: For Cloudinary videos with cloudinaryUrl
                 if (video.cloudinaryUrl) {
-                    // Try to extract public ID from the URL
-                    const urlMatch = video.cloudinaryUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.(mp4|webm|mov)/i);
+                    // Try to extract public ID from the URL with improved regex
+                    const urlMatch = video.cloudinaryUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.(mp4|webm|mov|avi|flv)/i);
                     if (urlMatch && urlMatch[1]) {
                         const publicId = urlMatch[1];
-                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto:low,w_400/${publicId}.mp4`;
+                        const previewDuration = video.duration && video.duration < 5 ? Math.max(2, Math.floor(video.duration)) : 5;
+                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_${previewDuration},f_auto,q_auto:low,w_400/${publicId}.mp4`;
+                        console.log('[Preview] Extracted from cloudinaryUrl:', preview.substring(0, 80));
                         setPreviewUrl(preview);
                         setLoading(false);
                         return;
@@ -55,6 +80,7 @@ export function useVideoPreview(video) {
                     const httpsUrl = video.cloudinaryUrl.startsWith('http://')
                         ? video.cloudinaryUrl.replace('http://', 'https://')
                         : video.cloudinaryUrl;
+                    console.log('[Preview] Using cloudinaryUrl directly (fallback):', httpsUrl.substring(0, 60));
                     setPreviewUrl(httpsUrl);
                     setLoading(false);
                     return;
@@ -66,60 +92,59 @@ export function useVideoPreview(video) {
                     const urlMatch = video.cloudinaryHlsUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.m3u8/i);
                     if (urlMatch && urlMatch[1]) {
                         const publicId = urlMatch[1];
-                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto:low,w_400/${publicId}.mp4`;
+                        const previewDuration = video.duration && video.duration < 5 ? Math.max(2, Math.floor(video.duration)) : 5;
+                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_${previewDuration},f_auto,q_auto:low,w_400/${publicId}.mp4`;
+                        console.log('[Preview] Generated from HLS URL:', preview.substring(0, 80));
                         setPreviewUrl(preview);
                         setLoading(false);
                         return;
                     }
 
-                    // Use HLS URL as fallback (some browsers support it)
-                    const httpsUrl = video.cloudinaryHlsUrl.startsWith('http://')
-                        ? video.cloudinaryHlsUrl.replace('http://', 'https://')
-                        : video.cloudinaryHlsUrl;
-                    setPreviewUrl(httpsUrl);
-                    setLoading(false);
-                    return;
+                    // Note: HLS URLs typically won't work in <video> tags without HLS.js
+                    console.warn('[Preview] HLS URL found but cannot extract ID:', video.cloudinaryHlsUrl.substring(0, 60));
                 }
 
-                // Priority 5: For S3 videos - use thumbnail as preview since S3 doesn't support transformations
-                // (Hover preview on S3 videos will show animated thumbnail effect instead)
+                // Priority 5: For S3 videos - no preview support
                 if (video.provider === 's3') {
-                    // For S3, we'll rely on the thumbnail with CSS animation
-                    // Don't set previewUrl for S3 videos to avoid CORS issues
+                    console.log('[Preview] S3 video - no preview available');
                     setPreviewUrl(null);
                     setLoading(false);
                     return;
                 }
 
-                // Priority 6: Default provider (cloudinary) - try to construct URL from any available info
+                // Priority 6: Try to construct from thumbnail URL (last resort for Cloudinary)
                 if (video.thumbnailUrl && video.thumbnailUrl.includes('cloudinary')) {
-                    // Try to extract public ID from thumbnail URL
-                    const urlMatch = video.thumbnailUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.(jpg|png|webp)/i);
-                    if (urlMatch && urlMatch[1]) {
-                        // Assume video has same public ID as thumbnail
-                        const publicId = urlMatch[1];
-                        const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_5,f_auto,q_auto:low,w_400/${publicId}.mp4`;
-                        setPreviewUrl(preview);
-                        setLoading(false);
-                        return;
+                    // Try multiple regex patterns to extract public ID from thumbnail
+                    const patterns = [
+                        /\/upload\/(?:v\d+\/)?(.+?)\.(jpg|png|webp|jpeg)/i,
+                        /\/image\/upload\/(?:v\d+\/)?(.+?)$/i,
+                        /cloudinary\.com\/[^\/]+\/[^\/]+\/upload\/(.+?)\.(jpg|png|webp|jpeg)/i
+                    ];
+
+                    for (const pattern of patterns) {
+                        const urlMatch = video.thumbnailUrl.match(pattern);
+                        if (urlMatch && urlMatch[1]) {
+                            // Remove image extension and try as video
+                            const publicId = urlMatch[1].replace(/\.(jpg|png|webp|jpeg)$/i, '');
+                            const previewDuration = video.duration && video.duration < 5 ? Math.max(2, Math.floor(video.duration)) : 5;
+                            const preview = `https://res.cloudinary.com/${cloudName}/video/upload/so_0,du_${previewDuration},f_auto,q_auto:low,w_400/${publicId}.mp4`;
+                            console.log('[Preview] Derived from thumbnail URL:', preview.substring(0, 80));
+                            setPreviewUrl(preview);
+                            setLoading(false);
+                            return;
+                        }
                     }
+                    console.warn('[Preview] Could not extract ID from thumbnail:', video.thumbnailUrl.substring(0, 60));
                 }
 
                 // Last resort: No preview available
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn('[Preview] No URL found for:', video.title?.substring(0, 30), {
-                        hasPreviewUrl: !!video.previewUrl,
-                        hasCloudinaryId: !!video.cloudinaryPublicId,
-                        hasCloudinaryUrl: !!video.cloudinaryUrl,
-                        hasHlsUrl: !!video.cloudinaryHlsUrl,
-                        provider: video.provider
-                    });
-                }
+                console.warn('[Preview] No preview available for video:', video.title?.substring(0, 40));
                 setPreviewUrl(null);
                 setLoading(false);
 
             } catch (error) {
-                console.error('[Preview Error]:', error.message);
+                console.error('[Preview Error]:', error.message, 'Video:', video.title?.substring(0, 40));
+                setError(error.message);
                 setPreviewUrl(null);
                 setLoading(false);
             }
@@ -128,5 +153,5 @@ export function useVideoPreview(video) {
         fetchPreviewUrl();
     }, [video]);
 
-    return { previewUrl, loading };
+    return { previewUrl, loading, error };
 }
