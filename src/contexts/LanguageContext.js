@@ -28,7 +28,7 @@ const translations = {
         amharic: "Amharic",
 
         // Homepage
-        hotCourseVideos: "Ethiopian 🇪🇹",
+        hotCourseVideos: "Hot Videos in Ethiopia 🇪🇹",
         all: "All",
         continueWatching: "Continue Watching",
         noVideosFound: "No videos found",

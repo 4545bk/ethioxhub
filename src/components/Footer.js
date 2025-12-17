@@ -143,7 +143,7 @@ const Footer = () => {
             <div className="border-t border-footer-border bg-background">
                 <div className="max-w-6xl mx-auto px-6 py-4">
                     <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-                        <span className="text-muted-foreground text-sm">© YourSite.com, 2025</span>
+                        <a href="https://ethioxhub.vercel.app/" className="text-muted-foreground text-sm hover:underline">© ethioxhub.vercel.app</a>
                         <div className="flex items-center gap-4">
                             <span className="text-foreground font-bold text-xl tracking-wider">RTA</span>
                             <button className="bg-link-orange text-white px-4 py-1.5 rounded text-sm font-medium hover:opacity-90 transition-opacity">

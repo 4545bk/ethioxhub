@@ -25,7 +25,7 @@ export default function UploadVideoPage() {
     const [videoFile, setVideoFile] = useState(null);
     const [thumbnailFile, setThumbnailFile] = useState(null);
 
-    const categories = ['Entertainment', 'Education', 'Music', 'Gaming', 'Sports', 'News'];
+    const categories = ['Live records', 'Fuck', 'Naked', 'Unfiltered', 'Behind the scenes', 'habesha', 'secrets', 'Ethiopian'];
 
     const handleFileChange = (e, type) => {
         const file = e.target.files[0];
