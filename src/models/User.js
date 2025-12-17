@@ -86,6 +86,10 @@ const UserSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Video'
         }],
+        unlockedPhotos: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Photo'
+        }],
         subscriptionExpiresAt: {
             type: Date
         },

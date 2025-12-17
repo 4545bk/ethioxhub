@@ -56,8 +56,10 @@ const TransactionSchema = new mongoose.Schema(
             rawText: String,
             // For purchases
             videoId: mongoose.Schema.Types.ObjectId,
+            photoId: mongoose.Schema.Types.ObjectId,
             ownerId: mongoose.Schema.Types.ObjectId,
             videoTitle: String,
+            photoTitle: String,
             // For platform fees
             feePercent: Number,
             // Any other contextual data

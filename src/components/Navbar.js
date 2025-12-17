@@ -44,6 +44,7 @@ export default function Navbar() {
         { name: t('home').toUpperCase(), href: '/' },
         { name: t('categories').toUpperCase(), href: '/categories' }, // Replaced COURSE VIDEOS with CATEGORIES as primary
         { name: t('subscribe').toUpperCase(), href: '/pricing' },
+        { name: 'PHOTOS', href: '/photos' },
         { name: 'INSTRUCTORS', href: '/instructors' },
         { name: 'COMMUNITY', href: '/community' },
     ];

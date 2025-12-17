@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useNotification } from '@/contexts/NotificationContext';
 
 export default function NotificationBell() {
-    const [notifications, setNotifications] = useState([]);
+    const { notifications, hasUnread, markAsRead } = useNotification();
     const [isOpen, setIsOpen] = useState(false);
-    const [hasUnread, setHasUnread] = useState(false);
     const dropdownRef = useRef(null);
 
     // Close dropdown when clicking outside
@@ -21,85 +21,6 @@ export default function NotificationBell() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Poll for notifications
-    useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                let token = localStorage.getItem('accessToken');
-                if (!token) return;
-
-                let res = await fetch('/api/user/notifications', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                // If token expired, try to refresh
-                if (res.status === 401) {
-                    console.log('Access token expired, attempting refresh...');
-                    const refreshToken = localStorage.getItem('refreshToken');
-
-                    if (refreshToken) {
-                        const refreshRes = await fetch('/api/auth/refresh', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ refreshToken })
-                        });
-
-                        if (refreshRes.ok) {
-                            const { accessToken } = await refreshRes.json();
-                            localStorage.setItem('accessToken', accessToken);
-
-                            // Retry with new token
-                            res = await fetch('/api/user/notifications', {
-                                headers: { Authorization: `Bearer ${accessToken}` }
-                            });
-                        } else {
-                            // Refresh failed, user needs to login again
-                            console.error('Token refresh failed');
-                            return;
-                        }
-                    }
-                }
-
-                if (res.ok) {
-                    const data = await res.json();
-                    const serverNotifications = data.notifications || [];
-
-                    // Map to component format
-                    const formatted = serverNotifications.map(n => ({
-                        id: n._id || n.createdAt,
-                        type: n.type || 'info', // 'referral' | 'info' | 'success' | 'warning'
-                        message: n.message,
-                        link: n.link || '#',
-                        date: new Date(n.createdAt),
-                        read: n.read
-                    }));
-
-                    setNotifications(formatted);
-
-                    const seenIds = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
-                    const reallyNew = formatted.filter(n => !seenIds.includes(n.id) && !n.read);
-
-                    if (reallyNew.length > 0) {
-                        setHasUnread(true);
-                    }
-                }
-            } catch (err) {
-                console.error('Notification poll failed', err);
-            }
-        };
-
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000); // Every 30s
-        return () => clearInterval(interval);
-    }, []);
-
-    const markAsRead = () => {
-        setHasUnread(false);
-        const seenIds = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
-        const newIds = notifications.map(n => n.id);
-        localStorage.setItem('seenNotifications', JSON.stringify([...new Array(...seenIds, ...newIds)]));
-    };
-
     const toggleDropdown = () => {
         if (!isOpen) markAsRead();
         setIsOpen(!isOpen);
@@ -110,6 +31,7 @@ export default function NotificationBell() {
             <button
                 onClick={toggleDropdown}
                 className="relative text-gray-300 hover:bg-gray-800 p-2 rounded-lg transition-colors"
+                aria-label="Notifications"
             >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />

@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import Footer from '@/components/Footer';
 import ReferralTracker from '@/components/ReferralTracker';
 
@@ -29,11 +30,13 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <LanguageProvider>
             <ToastProvider>
-              <Suspense fallback={null}>
-                <ReferralTracker />
-              </Suspense>
-              {children}
-              <Footer />
+              <NotificationProvider>
+                <Suspense fallback={null}>
+                  <ReferralTracker />
+                </Suspense>
+                {children}
+                <Footer />
+              </NotificationProvider>
             </ToastProvider>
           </LanguageProvider>
         </AuthProvider>

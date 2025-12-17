@@ -37,8 +37,13 @@ export async function GET(request) {
         // Category filter
         const categoryParam = searchParams.get('category');
         if (categoryParam) {
-            // Try to find category by ID or slug
-            const queryCriteria = [{ slug: categoryParam }];
+            // Try to find category by ID, slug, or name
+            const queryCriteria = [
+                { slug: categoryParam },
+                { slug: categoryParam.toLowerCase() },
+                { name: categoryParam },
+                { name: { $regex: new RegExp(`^${categoryParam}$`, 'i') } }
+            ];
 
             // Only check _id if it's a valid ObjectId string
             if (categoryParam.match(/^[0-9a-fA-F]{24}$/)) {

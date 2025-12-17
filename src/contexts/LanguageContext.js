@@ -28,7 +28,7 @@ const translations = {
         amharic: "Amharic",
 
         // Homepage
-        hotCourseVideos: "Hot Course Videos in Ethiopia 🇪🇹",
+        hotCourseVideos: "Ethiopian 🇪🇹",
         all: "All",
         continueWatching: "Continue Watching",
         noVideosFound: "No videos found",
@@ -96,6 +96,21 @@ const translations = {
         pending: "Pending",
         approved: "Approved",
         rejected: "Rejected",
+        paymentScreenshot: "Payment Screenshot",
+        amountEtb: "Amount (ETB)",
+        clickToUpload: "Click to upload screenshot",
+        submitDeposit: "Submit Deposit",
+        bankAccounts: "Bank Accounts",
+        cbe: "CBE",
+        commercialBank: "Commercial Bank of Ethiopia",
+        telebirr: "Telebirr",
+        mobileMoney: "Mobile Money",
+        copyAccount: "Copy Account Number",
+        copyPhone: "Copy Number",
+        ensureTransaction: "Please ensure you enter your transaction code correctly in the form for faster approval.",
+        location: "Location",
+        copiedAccount: "Copied account number!",
+        copiedPhone: "Copied phone number!",
 
         // Footer
         footerDescription: "Your platform provides you with unlimited free content with the best creators. Enjoy the largest community on the net as well as full-length scenes from the top studios. We update our content daily to ensure you always get the best quality experience.",
@@ -168,7 +183,7 @@ const translations = {
         amharic: "አማርኛ",
 
         // Homepage
-        hotCourseVideos: "በኢትዮጵያ ውስጥ ትኩስ የኮርስ ቪዲዮዎች 🇪🇹",
+        hotCourseVideos: "የኢትዮጵያ 🇪🇹",
         all: "ሁሉም",
         continueWatching: "መመልከት ቀጥል",
         noVideosFound: "ምንም ቪዲዮዎች አልተገኙም",
@@ -236,6 +251,21 @@ const translations = {
         pending: "በመጠባበቅ ላይ",
         approved: "ጸድቋል",
         rejected: "ተቀባይነት አላገኘም",
+        paymentScreenshot: "የክፍያ ስክሪንሾት",
+        amountEtb: "መጠን (ETB)",
+        clickToUpload: "ስክሪንሾት ለመጫን እዚህ ይጫኑ",
+        submitDeposit: "ተቀማጭ ያስገቡ",
+        bankAccounts: "የባንክ ሂሳቦች",
+        cbe: "የኢትዮጵያ ንግድ ባንክ",
+        commercialBank: "የኢትዮጵያ ንግድ ባንክ",
+        telebirr: "ቴሌብር",
+        mobileMoney: "የሞባይል ገንዘብ",
+        copyAccount: "የሂሳብ ቁጥር ገልብጥ",
+        copyPhone: "ቁጥር ገልብጥ",
+        ensureTransaction: "እባክዎ ለፈጣን ማረጋገጫ የግብይት ኮድዎን በትክክል ማስገባትዎን ያረጋግጡ።",
+        location: "ቦታ",
+        copiedAccount: "የሂሳብ ቁጥሩ ተቀድቷል!",
+        copiedPhone: "ስልክ ቁጥሩ ተቀድቷል!",
 
         // Footer
         footerDescription: "የእርስዎ መድረክ ከምርጥ ፈጣሪዎች ጋር ያልተገደበ ነፃ ይዘትን ይሰጥዎታል። በድሩ ላይ ትልቁን ማህበረሰብ እንዲሁም ከከፍተኛ ስቱዲዮዎች ሙሉ ርዝመት ያሉ ትዕይንቶችን ይደሰቱ። ሁልጊዜ ምርጡን የጥራት ተሞክሮ እንዲያገኙ ይዘታችንን በየቀኑ እናዘምናለን።",

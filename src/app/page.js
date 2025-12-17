@@ -95,7 +95,7 @@ function HomePageContent() {
                                 </button>
                             )) : (
                                 // Fallback/default categories if none loaded yet
-                                ['Comedy', 'Education', 'Entertainment', 'Gaming', 'Music', 'News', 'Sports', 'Technology'].map((cat) => (
+                                ['Live records', 'Fuck', 'Naked', 'Unfiltered', 'Behind the scenes', 'habesha', 'secrets', 'Ethiopian'].map((cat) => (
                                     <button
                                         key={cat}
                                         className="flex-1 px-3 py-1.5 rounded border border-gray-700 bg-gray-800 text-white text-sm whitespace-nowrap hover:bg-gray-700 text-center"
