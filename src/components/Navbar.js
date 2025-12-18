@@ -19,6 +19,7 @@ export default function Navbar() {
     const [searchQuery, setSearchQuery] = useState('');
 
     const isAdminPage = pathname?.startsWith('/admin');
+    const isSubscriber = user && (user.isSubscriber || (user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date()));
 
     useEffect(() => {
         if (user) {
@@ -43,7 +44,7 @@ export default function Navbar() {
     const navItems = [
         { name: t('home').toUpperCase(), href: '/' },
         { name: t('categories').toUpperCase(), href: '/categories' }, // Replaced COURSE VIDEOS with CATEGORIES as primary
-        { name: t('subscribe').toUpperCase(), href: '/pricing' },
+        { name: isSubscriber ? 'VIP MEMBER' : t('subscribe').toUpperCase(), href: '/pricing' },
         { name: 'PHOTOS', href: '/photos' },
         { name: 'INSTRUCTORS', href: '/instructors' },
         { name: 'COMMUNITY', href: '/community' },
@@ -101,12 +102,24 @@ export default function Navbar() {
                             {user ? (
                                 <>
                                     {!isAdminPage && (
-                                        <Link
-                                            href="/pricing"
-                                            className="bg-orange-500 hover:bg-orange-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded font-bold text-xs sm:text-sm transition-colors whitespace-nowrap"
-                                        >
-                                            {t('subscribe').toUpperCase()}
-                                        </Link>
+                                        isSubscriber ? (
+                                            <Link
+                                                href="/pricing"
+                                                className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded font-bold text-xs sm:text-sm transition-all shadow-lg border border-yellow-300/50 flex items-center gap-1.5 transform hover:scale-105"
+                                            >
+                                                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                                SUBSCRIBED
+                                            </Link>
+                                        ) : (
+                                            <Link
+                                                href="/pricing"
+                                                className="bg-orange-500 hover:bg-orange-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded font-bold text-xs sm:text-sm transition-colors whitespace-nowrap"
+                                            >
+                                                {t('subscribe').toUpperCase()}
+                                            </Link>
+                                        )
                                     )}
 
                                     {/* Notifications (Hidden on mobile, in menu) */}
