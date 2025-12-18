@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import Navbar from '@/components/Navbar';
-import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import Navbar from '../../../components/Navbar';
+import { useToast } from '../../../contexts/ToastContext';
 
 export default function PhotoDetailClient({ id }) {
     const router = useRouter();
@@ -242,8 +242,8 @@ export default function PhotoDetailClient({ id }) {
                                 <button
                                     onClick={handleLike}
                                     className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${photo.likes?.includes(user?._id)
-                                            ? 'bg-red-500 hover:bg-red-600 text-white'
-                                            : 'bg-gray-700 hover:bg-gray-600 text-white'
+                                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                                        : 'bg-gray-700 hover:bg-gray-600 text-white'
                                         }`}
                                 >
                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

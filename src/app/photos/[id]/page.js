@@ -1,6 +1,6 @@
 import PhotoDetailClient from './PhotoDetailClient';
-import connectDB from '@/lib/db';
-import Photo from '@/models/Photo';
+import connectDB from '../../../lib/db';
+import Photo from '../../../models/Photo';
 
 export async function generateMetadata({ params }) {
     try {
