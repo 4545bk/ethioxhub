@@ -69,6 +69,26 @@ export default function PhotosPage() {
     };
 
 
+    const sharePhoto = (e, photo) => {
+        e.stopPropagation();
+        const shareUrl = `${window.location.origin}/photos/${photo._id}`;
+
+        // Try native share API first (works great on mobile and Telegram in-app browser)
+        if (navigator.share) {
+            navigator.share({
+                title: photo.title,
+                text: photo.description || `Check out this photo on EthioxHub!`,
+                url: shareUrl
+            }).catch(err => console.log('Share canceled'));
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                toast.success('Link copied! Share it on Telegram');
+            });
+        }
+    };
+
+
     const handlePurchase = (e, photo) => {
         e.stopPropagation();
         if (!user) {
@@ -238,24 +258,39 @@ export default function PhotosPage() {
                                             </button>
                                             <span className="text-sm">{photo.likesCount}</span>
                                         </div>
+
+                                        {/* Share Button */}
+                                        <button
+                                            onClick={(e) => sharePhoto(e, photo)}
+                                            className="p-1.5 rounded-full backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-colors"
+                                            title="Share on Telegram"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
 
                                 {/* Album Indicator */}
-                                {photo.album && photo.album.length > 1 && (
-                                    <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1.5 rounded-md backdrop-blur-sm flex items-center gap-1.5 shadow-sm">
-                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <span className="text-xs font-bold leading-none">{photo.album.length}</span>
-                                    </div>
-                                )}
+                                {
+                                    photo.album && photo.album.length > 1 && (
+                                        <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1.5 rounded-md backdrop-blur-sm flex items-center gap-1.5 shadow-sm">
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span className="text-xs font-bold leading-none">{photo.album.length}</span>
+                                        </div>
+                                    )
+                                }
 
-                                {photo.isPaid && (
-                                    <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg">
-                                        VIP
-                                    </div>
-                                )}
+                                {
+                                    photo.isPaid && (
+                                        <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg">
+                                            VIP
+                                        </div>
+                                    )
+                                }
 
                                 {!photo.canView && (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-4 text-center">
@@ -442,6 +477,6 @@ export default function PhotosPage() {
                     )}
                 </AnimatePresence>
             </div>
-        </div>
+        </div >
     );
 }
