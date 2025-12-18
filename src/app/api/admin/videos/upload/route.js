@@ -118,6 +118,10 @@ export async function POST(request) {
         if (!videoData.videoUrl) {
             if (videoData.provider === 'cloudinary') {
                 videoData.videoUrl = videoData.cloudinaryUrl;
+            } else if (videoData.provider === 's3' && videoData.s3Key && !videoData.videoUrl) {
+                const bucket = videoData.s3Bucket || 'ethioxhub';
+                const region = process.env.AWS_REGION || 'eu-north-1';
+                videoData.videoUrl = `https://${bucket}.s3.${region}.amazonaws.com/${videoData.s3Key}`;
             }
         }
 
