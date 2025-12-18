@@ -274,15 +274,13 @@ export default function AdminDashboard() {
             });
 
             if (res.ok) {
-                fetchData();
-                fetchAnalytics();
                 setIsDeleteModalOpen(false);
                 setSelectedVideoId(null);
                 setSelectedVideoTitle('');
                 toast.success('Video deleted successfully! 🗑️');
-                // Refresh list
-                if (allVideos.length > 0) fetchAllVideos();
-                if (videos.length > 0) fetchVideos();
+                // Refresh the current data
+                fetchData();
+                fetchAnalytics();
             } else {
                 const error = await res.json();
                 toast.error(error.error || 'Failed to delete video');
