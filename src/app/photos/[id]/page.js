@@ -28,12 +28,19 @@ export async function generateMetadata({ params }) {
         // Apply blur and overlay for separate specific VIP photos (Cloudinary only)
         if (photo.isPaid && imageUrl && imageUrl.includes('cloudinary.com')) {
             const price = (photo.price / 100).toFixed(2);
-            const text = `Premium Content - ${price} ETB`;
-            const encodedText = encodeURIComponent(text).replace(/%20/g, '%20'); // Ensure spaces are encoded
+            // Main Text: Gold with Lock Icon
+            const text = `🔒 Premium Content - ${price} ETB`;
+            const encodedText = encodeURIComponent(text).replace(/%20/g, '%20');
 
-            // e_blur:1500 -> Heavy blur
-            // l_text:... -> Overlay text with price
-            const transformation = `e_blur:2000/co_white,l_text:Arial_60_bold:${encodedText},e_outline:outer:2:000000/fl_layer_apply,g_center`;
+            // Branding Text: White at bottom
+            const branding = encodeURIComponent('EthioxHub');
+
+            // 1. Blur
+            // 2. Main Text (Gold #FFD700, outlined)
+            // 3. Branding (White, bottom)
+            const transformation = `e_blur:2000` +
+                `/co_rgb:FFD700,l_text:Arial_60_bold:${encodedText},e_outline:outer:4:000000/fl_layer_apply,g_center` +
+                `/co_white,l_text:Arial_30_bold:${branding},e_shadow:50,o_80/fl_layer_apply,g_south,y_20`;
 
             imageUrl = imageUrl.replace('/upload/', `/upload/${transformation}/`);
         }
