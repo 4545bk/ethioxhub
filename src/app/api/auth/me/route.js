@@ -30,6 +30,9 @@ export async function GET(request) {
                 profilePicture: user.profilePicture || '',
                 verifiedAge: user.verifiedAge,
                 createdAt: user.createdAt,
+                isSubscriber: user.isSubscriber,
+                subscriptionExpiresAt: user.subscriptionExpiresAt,
+                subscriptionPlan: user.subscriptionPlan,
             },
         });
     } catch (err) {
