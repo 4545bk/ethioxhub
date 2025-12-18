@@ -25,24 +25,30 @@ export async function generateMetadata({ params }) {
             }
         }
 
-        // Apply blur and overlay for separate specific VIP photos (Cloudinary only)
-        if (photo.isPaid && imageUrl && imageUrl.includes('cloudinary.com')) {
-            const price = (photo.price / 100).toFixed(2);
-            // Main Text: Gold with Lock Icon
-            const text = `🔒 Premium Content - ${price} ETB`;
-            const encodedText = encodeURIComponent(text).replace(/%20/g, '%20');
+        // Apply blur and overlay for separate specific VIP photos
+        if (photo.isPaid) {
+            if (imageUrl && imageUrl.includes('cloudinary.com')) {
+                const price = (photo.price / 100).toFixed(2);
+                // Main Text: Gold with Lock Icon
+                const text = `🔒 Premium Content - ${price} ETB`;
+                const encodedText = encodeURIComponent(text).replace(/%20/g, '%20');
 
-            // Branding Text: White at bottom
-            const branding = encodeURIComponent('EthioxHub');
+                // Branding Text: White at bottom
+                const branding = encodeURIComponent('EthioxHub');
 
-            // 1. Blur
-            // 2. Main Text (Gold #FFD700, outlined)
-            // 3. Branding (White, bottom)
-            const transformation = `e_blur:2000` +
-                `/co_rgb:FFD700,l_text:Arial_60_bold:${encodedText},e_outline:outer:4:000000/fl_layer_apply,g_center` +
-                `/co_white,l_text:Arial_30_bold:${branding},e_shadow:50,o_80/fl_layer_apply,g_south,y_20`;
+                // 1. Blur
+                // 2. Main Text (Gold #FFD700, outlined)
+                // 3. Branding (White, bottom)
+                const transformation = `e_blur:2000` +
+                    `/co_rgb:FFD700,l_text:Arial_60_bold:${encodedText},e_outline:outer:4:000000/fl_layer_apply,g_center` +
+                    `/co_white,l_text:Arial_30_bold:${branding},e_shadow:50,o_80/fl_layer_apply,g_south,y_20`;
 
-            imageUrl = imageUrl.replace('/upload/', `/upload/${transformation}/`);
+                imageUrl = imageUrl.replace('/upload/', `/upload/${transformation}/`);
+            } else {
+                // Non-Cloudinary (S3, etc): CANNOT dynamically blur.
+                // MUST replace with a safe placeholder to prevent leaking paid content.
+                imageUrl = 'https://placehold.co/1200x630/111827/FFD700/png?text=🔒+Premium+Content+Locked&font=roboto';
+            }
         }
 
         return {
