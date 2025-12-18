@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-hot-toast';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function PhotoDetailPage() {
     const params = useParams();
@@ -15,6 +15,7 @@ export default function PhotoDetailPage() {
     const [loading, setLoading] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [purchasing, setPurchasing] = useState(false);
+    const toast = useToast();
 
     useEffect(() => {
         fetchPhoto();
@@ -243,8 +244,8 @@ export default function PhotoDetailPage() {
                                 <button
                                     onClick={handleLike}
                                     className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${photo.likes?.includes(user?._id)
-                                            ? 'bg-red-500 hover:bg-red-600 text-white'
-                                            : 'bg-gray-700 hover:bg-gray-600 text-white'
+                                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                                        : 'bg-gray-700 hover:bg-gray-600 text-white'
                                         }`}
                                 >
                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
