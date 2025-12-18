@@ -74,6 +74,10 @@ const VideoSchema = new mongoose.Schema(
         s3Bucket: {
             type: String,
         },
+        // Generic video URL (for both Cloudinary and S3)
+        videoUrl: {
+            type: String,
+        },
         // Preview URLs for hover
         previewUrl: {
             type: String,
