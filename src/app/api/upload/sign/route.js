@@ -21,8 +21,8 @@ export async function GET(request) {
 
         if (provider === 's3') {
             // S3 Signature
-            const { uploadUrl, publicUrl, key } = await generateS3UploadUrl(fileName, fileType);
-            return NextResponse.json({ uploadUrl, publicUrl, key, provider: 's3' });
+            const { uploadUrl, publicUrl, key, bucket } = await generateS3UploadUrl(fileName, fileType);
+            return NextResponse.json({ uploadUrl, publicUrl, key, bucket, provider: 's3' });
         }
 
         // Cloudinary Signature (Default)
