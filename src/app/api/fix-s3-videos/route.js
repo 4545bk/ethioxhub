@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
+import connectDB from '@/lib/db';
 import Video from '@/models/Video';
 
 export async function POST(req) {
     try {
-        await dbConnect();
+        await connectDB();
 
         // Step 1: Add videoUrl to S3 videos that have s3Key but no videoUrl
         const videosToUpdate = await Video.find({
