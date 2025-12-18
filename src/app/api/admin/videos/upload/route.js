@@ -21,14 +21,14 @@ const createVideoSchema = z.object({
     provider: z.enum(['cloudinary', 's3']).default('cloudinary'),
     // Cloudinary
     cloudinaryPublicId: z.string().optional(),
-    cloudinaryUrl: z.string().url().optional(),
+    cloudinaryUrl: z.union([z.string().url(), z.literal('')]).nullable().optional(),
     // S3
     s3Key: z.string().optional(),
     s3Bucket: z.string().optional(),
 
     // Generic
-    videoUrl: z.string().url().optional(), // For logic consistency if passed
-    thumbnailUrl: z.string().url().optional(),
+    videoUrl: z.union([z.string().url(), z.literal('')]).nullable().optional(), // For logic consistency if passed
+    thumbnailUrl: z.union([z.string().url(), z.literal('')]).nullable().optional(),
     isPaid: z.boolean().default(false),
     price: z.number().min(0).default(0),
     duration: z.number().optional(),
