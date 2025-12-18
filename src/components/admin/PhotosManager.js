@@ -14,6 +14,7 @@ export default function PhotosManager() {
         isPaid: false,
         price: 0
     });
+    const [files, setFiles] = useState([]); // For batch upload
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [editingId, setEditingId] = useState(null);
@@ -44,67 +45,146 @@ export default function PhotosManager() {
     };
 
     const handleFileChange = (e) => {
-        const f = e.target.files[0];
-        if (f) {
-            setFile(f);
-            setPreview(URL.createObjectURL(f));
+        if (editingId) {
+            // Edit mode - single file
+            const f = e.target.files[0];
+            if (f) {
+                setFile(f);
+                setPreview(URL.createObjectURL(f));
+            }
+        } else {
+            // Batch mode
+            if (e.target.files && e.target.files.length > 0) {
+                const selected = Array.from(e.target.files);
+                if (selected.length > 8) {
+                    toast.error('Maximum 8 photos allowed at once');
+                    return;
+                }
+                setFiles(selected);
+                setFile(null); // Clear single file
+                setPreview(null); // Clear single preview
+            }
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.title) return toast.error('Title is required');
-        if (!file && !editingId) return toast.error('Image is required');
+
+        // Validation
+        if (!form.title && !editingId) return toast.error('Title is required');
+
+        if (editingId) {
+            if (!file && !form.url) return toast.error('Image is required');
+        } else {
+            if (files.length === 0) return toast.error('Please select photos');
+        }
 
         setUploading(true);
         const token = localStorage.getItem('accessToken');
 
         try {
-            let url = form.url; // Use existing URL if editing and no new file
+            if (editingId) {
+                // --- UPDATE SINGLE PHOTO ---
+                let url = form.url;
 
-            // 1. Upload if file exists
-            if (file) {
-                const signRes = await fetch('/api/upload/sign?resource_type=image', {
-                    headers: { Authorization: `Bearer ${token}` }
+                // 1. Upload if file exists
+                if (file) {
+                    const signRes = await fetch('/api/upload/sign?resource_type=image', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (!signRes.ok) throw new Error('Failed to sign upload');
+                    const sig = await signRes.json();
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('api_key', sig.apiKey);
+                    formData.append('timestamp', sig.timestamp);
+                    formData.append('signature', sig.signature);
+                    if (sig.folder) formData.append('folder', sig.folder);
+
+                    const upRes = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`, {
+                        method: 'POST', body: formData
+                    });
+                    if (!upRes.ok) throw new Error('Upload failed');
+                    const upData = await upRes.json();
+                    url = upData.secure_url;
+                }
+
+                // 2. Update Photo
+                const res = await fetch(`/api/photos/${editingId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        ...form,
+                        url,
+                        price: parseFloat(form.price) * 100 // Convert to cents
+                    })
                 });
-                if (!signRes.ok) throw new Error('Failed to sign upload');
-                const sig = await signRes.json();
 
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('api_key', sig.apiKey);
-                formData.append('timestamp', sig.timestamp);
-                formData.append('signature', sig.signature);
-                if (sig.folder) formData.append('folder', sig.folder);
+                if (!res.ok) throw new Error('Failed to update photo');
+                toast.success('Photo updated');
 
-                const upRes = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`, {
-                    method: 'POST', body: formData
+            } else {
+                // --- ALBUM UPLOAD ---
+                const albumUrls = [];
+
+                // Upload all files
+                for (let i = 0; i < files.length; i++) {
+                    const currentFile = files[i];
+
+                    // 1. Sign
+                    const signRes = await fetch('/api/upload/sign?resource_type=image', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (!signRes.ok) throw new Error('Failed to sign upload');
+                    const sig = await signRes.json();
+
+                    // 2. Upload
+                    const formData = new FormData();
+                    formData.append('file', currentFile);
+                    formData.append('api_key', sig.apiKey);
+                    formData.append('timestamp', sig.timestamp);
+                    formData.append('signature', sig.signature);
+                    if (sig.folder) formData.append('folder', sig.folder);
+
+                    const upRes = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`, {
+                        method: 'POST', body: formData
+                    });
+
+                    if (!upRes.ok) {
+                        toast.error(`Upload failed for image ${i + 1}`);
+                        continue;
+                    }
+
+                    const upData = await upRes.json();
+                    albumUrls.push(upData.secure_url);
+                }
+
+                if (albumUrls.length === 0) throw new Error('No images uploaded');
+
+                // 3. Create SINGLE Record (Album)
+                const res = await fetch('/api/photos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        ...form,
+                        title: form.title,
+                        url: albumUrls[0], // First image is cover
+                        album: albumUrls,  // All images in album
+                        price: parseFloat(form.price) * 100
+                    })
                 });
-                if (!upRes.ok) throw new Error('Upload failed');
-                const upData = await upRes.json();
-                url = upData.secure_url;
+
+                if (!res.ok) throw new Error('Failed to create album');
+                toast.success(`Album created with ${albumUrls.length} photos!`);
             }
 
-            // 2. Create or Update Photo
-            const endpoint = editingId ? `/api/photos/${editingId}` : '/api/photos';
-            const method = editingId ? 'PUT' : 'POST';
-
-            const res = await fetch(endpoint, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    ...form,
-                    url,
-                    price: parseFloat(form.price) * 100 // Convert to cents
-                })
-            });
-
-            if (!res.ok) throw new Error('Failed to save photo');
-
-            toast.success(editingId ? 'Photo updated' : 'Photo uploaded');
             closeModal();
             fetchPhotos();
 
@@ -154,6 +234,7 @@ export default function PhotosManager() {
         setIsModalOpen(false);
         setForm({ title: '', description: '', isPaid: false, price: 0 });
         setFile(null);
+        setFiles([]); // Clear
         setPreview(null);
         setEditingId(null);
     };
@@ -293,12 +374,24 @@ export default function PhotosManager() {
                                     <input
                                         type="file"
                                         accept="image/*"
+                                        multiple={!editingId} // Allow multiple if adding new
                                         onChange={handleFileChange}
                                         className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                     />
+                                    {/* Preview for Single (Edit) */}
                                     {preview && (
                                         <div className="mt-4 w-full h-40 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                                             <img src={preview} alt="Preview" className="w-full h-full object-contain" />
+                                        </div>
+                                    )}
+                                    {/* Preview for Grid (Batch) */}
+                                    {!editingId && files.length > 0 && (
+                                        <div className="mt-4 grid grid-cols-4 gap-2">
+                                            {files.map((f, i) => (
+                                                <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative">
+                                                    <img src={URL.createObjectURL(f)} alt={`Preview ${i}`} className="w-full h-full object-cover" />
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                 </div>

@@ -14,6 +14,7 @@ export default function PhotosPage() {
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedPhoto, setSelectedPhoto] = useState(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [purchaseModal, setPurchaseModal] = useState(null);
     const [processingPurchase, setProcessingPurchase] = useState(false);
     const toast = useToast();
@@ -131,7 +132,60 @@ export default function PhotosPage() {
             return;
         }
         setSelectedPhoto(photo);
+        setCurrentImageIndex(0);
     };
+
+    const handleNext = (e) => {
+        e?.stopPropagation();
+        if (!selectedPhoto) return;
+
+        // Album Navigation
+        if (selectedPhoto.album && selectedPhoto.album.length > 1) {
+            setCurrentImageIndex((prev) => (prev + 1) % selectedPhoto.album.length);
+            return;
+        }
+
+        // Feed Navigation (Single Photos)
+        const viewable = photos.filter(p => p.canView || user?.roles?.includes('admin'));
+        if (viewable.length <= 1) return;
+
+        const currentIdx = viewable.findIndex(p => p._id === selectedPhoto._id);
+        const nextIdx = (currentIdx + 1) % viewable.length;
+        setSelectedPhoto(viewable[nextIdx]);
+        setCurrentImageIndex(0);
+    };
+
+    const handlePrev = (e) => {
+        e?.stopPropagation();
+        if (!selectedPhoto) return;
+
+        // Album Navigation
+        if (selectedPhoto.album && selectedPhoto.album.length > 1) {
+            setCurrentImageIndex((prev) => (prev - 1 + selectedPhoto.album.length) % selectedPhoto.album.length);
+            return;
+        }
+
+        // Feed Navigation (Single Photos)
+        const viewable = photos.filter(p => p.canView || user?.roles?.includes('admin'));
+        if (viewable.length <= 1) return;
+
+        const currentIdx = viewable.findIndex(p => p._id === selectedPhoto._id);
+        const prevIdx = (currentIdx - 1 + viewable.length) % viewable.length;
+        setSelectedPhoto(viewable[prevIdx]);
+        setCurrentImageIndex(0);
+    };
+
+    // Keyboard navigation
+    useEffect(() => {
+        if (!selectedPhoto) return;
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowRight') handleNext();
+            if (e.key === 'ArrowLeft') handlePrev();
+            if (e.key === 'Escape') setSelectedPhoto(null);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedPhoto, photos]);
 
     return (
         <div className="min-h-screen bg-dark-950">
@@ -184,6 +238,15 @@ export default function PhotosPage() {
                                     </div>
                                 </div>
 
+                                {/* Album Indicator */}
+                                {photo.album && photo.album.length > 1 && (
+                                    <div className="absolute top-2 left-2 bg-black/60 text-white p-1.5 rounded-md backdrop-blur-sm">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                )}
+
                                 {photo.isPaid && (
                                     <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg">
                                         VIP
@@ -226,19 +289,42 @@ export default function PhotosPage() {
                             onClick={() => setSelectedPhoto(null)}
                         >
                             <button
-                                className="absolute top-4 right-4 text-white/50 hover:text-white p-2"
+                                className="absolute top-4 right-4 text-white/50 hover:text-white p-2 z-50 rounded-full bg-black/20 hover:bg-black/50 transition-colors"
                                 onClick={() => setSelectedPhoto(null)}
                             >
                                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
 
+                            {/* Navigation Buttons */}
+                            <button
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 hover:bg-black/70 rounded-full text-white/80 hover:text-white transition-colors z-40"
+                                onClick={handlePrev}
+                            >
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+
+                            <button
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 hover:bg-black/70 rounded-full text-white/80 hover:text-white transition-colors z-40"
+                                onClick={handleNext}
+                            >
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            </button>
+
                             <motion.img
+                                key={selectedPhoto.album?.length > 1 ? currentImageIndex : selectedPhoto._id} // Force re-render for internal swipe
                                 layoutId={`photo-${selectedPhoto._id}`}
-                                src={selectedPhoto.url}
+                                src={(selectedPhoto.album && selectedPhoto.album.length > 0) ? selectedPhoto.album[currentImageIndex] : selectedPhoto.url}
                                 alt={selectedPhoto.title}
                                 className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
                                 onClick={(e) => e.stopPropagation()}
                             />
+
+                            {/* Counter for Album */}
+                            {selectedPhoto.album && selectedPhoto.album.length > 1 && (
+                                <div className="absolute top-4 left-4 text-white bg-black/50 px-3 py-1 rounded-full text-sm">
+                                    {currentImageIndex + 1} / {selectedPhoto.album.length}
+                                </div>
+                            )}
 
                             <div className="absolute bottom-4 left-0 right-0 text-center p-4">
                                 <h2 className="text-xl text-white font-bold mb-1">{selectedPhoto.title}</h2>

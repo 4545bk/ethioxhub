@@ -22,6 +22,7 @@ const PhotoSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    album: [String], // Array of URLs for album support
     thumbnailUrl: String, // For optimized loading if processed
     isPaid: {
         type: Boolean,

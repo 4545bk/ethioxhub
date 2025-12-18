@@ -62,7 +62,7 @@ export async function POST(request) {
         await connectDB();
         const body = await request.json();
 
-        const { title, description, url, isPaid, price } = body;
+        const { title, description, url, isPaid, price, album } = body;
 
         if (!title || !url) {
             return NextResponse.json({ error: 'Title and URL are required' }, { status: 400 });
@@ -73,6 +73,7 @@ export async function POST(request) {
             title,
             description,
             url,
+            album: album || [], // Store album array
             isPaid: !!isPaid,
             price: price ? parseInt(price) : 0,
             status: 'active'
