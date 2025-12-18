@@ -240,10 +240,11 @@ export default function PhotosPage() {
 
                                 {/* Album Indicator */}
                                 {photo.album && photo.album.length > 1 && (
-                                    <div className="absolute top-2 left-2 bg-black/60 text-white p-1.5 rounded-md backdrop-blur-sm">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1.5 rounded-md backdrop-blur-sm flex items-center gap-1.5 shadow-sm">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
+                                        <span className="text-xs font-bold leading-none">{photo.album.length}</span>
                                     </div>
                                 )}
 
@@ -264,7 +265,7 @@ export default function PhotosPage() {
                                                 onClick={(e) => handlePurchase(e, photo)}
                                                 className="mt-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-1 px-3 rounded-full text-sm transition-colors shadow-lg"
                                             >
-                                                Unlock for {(photo.price / 100).toFixed(2)} ETB
+                                                Unlock {photo.album?.length > 1 ? `Album (${photo.album.length})` : 'Photo'} for {(photo.price / 100).toFixed(2)} ETB
                                             </button>
                                         ) : (
                                             <Link href="/pricing" onClick={(e) => e.stopPropagation()} className="mt-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-1 px-3 rounded-full text-sm transition-colors shadow-lg">
@@ -353,7 +354,7 @@ export default function PhotosPage() {
                             >
                                 <h3 className="text-xl font-bold text-white mb-4">Unlock Photo</h3>
                                 <p className="text-gray-300 mb-6">
-                                    Unlock "<span className="font-semibold text-white">{purchaseModal.title}</span>" for <span className="font-semibold text-yellow-500">{(purchaseModal.price / 100).toFixed(2)} ETB</span>?
+                                    Unlock "<span className="font-semibold text-white">{purchaseModal.title}</span>" {purchaseModal.album?.length > 1 && <span className="text-yellow-500/80">({purchaseModal.album.length} photos)</span>} for <span className="font-semibold text-yellow-500">{(purchaseModal.price / 100).toFixed(2)} ETB</span>?
                                 </p>
 
                                 <div className="flex gap-3">
