@@ -114,15 +114,15 @@ export async function POST(request) {
             status: 'approved', // Admin uploads are auto-approved
         };
 
-        // Ensure generic videoUrl is set if missing
-        if (!videoData.videoUrl) {
-            if (videoData.provider === 'cloudinary') {
-                videoData.videoUrl = videoData.cloudinaryUrl;
-            } else if (videoData.provider === 's3' && videoData.s3Key && !videoData.videoUrl) {
-                const bucket = videoData.s3Bucket || 'ethioxhub';
-                const region = process.env.AWS_REGION || 'eu-north-1';
-                videoData.videoUrl = `https://${bucket}.s3.${region}.amazonaws.com/${videoData.s3Key}`;
-            }
+        // Ensure accurate videoUrl
+        if (videoData.provider === 's3' && videoData.s3Key) {
+            // S3: Always generate URL server-side to ensure correctness
+            const bucket = videoData.s3Bucket || 'ethioxhub';
+            const region = process.env.AWS_REGION || 'eu-north-1';
+            videoData.videoUrl = `https://${bucket}.s3.${region}.amazonaws.com/${videoData.s3Key}`;
+        } else if (videoData.provider === 'cloudinary' && !videoData.videoUrl) {
+            // Cloudinary: fallback to cloudinaryUrl
+            videoData.videoUrl = videoData.cloudinaryUrl;
         }
 
         console.log('Creating video with data:', {
