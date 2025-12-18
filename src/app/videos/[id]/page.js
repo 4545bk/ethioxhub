@@ -269,7 +269,9 @@ export default function VideoPlayerPage() {
             });
 
             videoRef.current.addEventListener('loadedmetadata', () => {
-                console.log('✅ Video metadata loaded. Duration:', videoRef.current.duration);
+                if (videoRef.current) {
+                    console.log('✅ Video metadata loaded. Duration:', videoRef.current.duration);
+                }
             });
         }
     };

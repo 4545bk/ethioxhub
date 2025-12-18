@@ -104,13 +104,53 @@ export function useVideoPreview(video) {
                     console.warn('[Preview] HLS URL found but cannot extract ID:', video.cloudinaryHlsUrl.substring(0, 60));
                 }
 
-                // Priority 5: For S3 videos - no preview support
+
+                // Priority 5: For S3 videos - use full video URL with time control
                 if (video.provider === 's3') {
-                    console.log('[Preview] S3 video - no preview available');
-                    setPreviewUrl(null);
-                    setLoading(false);
-                    return;
+                    // S3 doesn't support transformations, so we use the full video URL
+                    // and control playback time in the component (0-5 seconds)
+
+                    // Try multiple S3 URL sources
+                    let s3VideoUrl = null;
+
+                    // Option 1: Direct videoUrl field
+                    if (video.videoUrl) {
+                        s3VideoUrl = video.videoUrl;
+                    }
+                    // Option 2: Construct from s3Key and s3Bucket
+                    else if (video.s3Key && video.s3Bucket) {
+                        // Construct S3 URL
+                        const region = process.env.NEXT_PUBLIC_AWS_REGION || 'us-east-1';
+                        s3VideoUrl = `https://${video.s3Bucket}.s3.${region}.amazonaws.com/${video.s3Key}`;
+                    }
+                    // Option 3: Look for any URL-like field
+                    else if (video.url) {
+                        s3VideoUrl = video.url;
+                    }
+
+                    if (s3VideoUrl) {
+                        // Ensure HTTPS
+                        const httpsUrl = s3VideoUrl.startsWith('http://')
+                            ? s3VideoUrl.replace('http://', 'https://')
+                            : s3VideoUrl;
+
+                        console.log('[Preview] Using S3 video URL (time-controlled):', httpsUrl.substring(0, 60));
+                        setPreviewUrl(httpsUrl);
+                        setLoading(false);
+                        return;
+                    } else {
+                        console.warn('[Preview] S3 video found but no URL available:', {
+                            hasVideoUrl: !!video.videoUrl,
+                            hasS3Key: !!video.s3Key,
+                            hasS3Bucket: !!video.s3Bucket,
+                            hasUrl: !!video.url
+                        });
+                        setPreviewUrl(null);
+                        setLoading(false);
+                        return;
+                    }
                 }
+
 
                 // Priority 6: Try to construct from thumbnail URL (last resort for Cloudinary)
                 if (video.thumbnailUrl && video.thumbnailUrl.includes('cloudinary')) {

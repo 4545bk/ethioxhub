@@ -17,24 +17,115 @@ export default function VideoCardWithPreview({ video }) {
     const { previewUrl } = useVideoPreview(video);
     const hoverTimeoutRef = useRef(null);
     const videoRef = useRef(null);
+    const [corsError, setCorsError] = useState(false);
 
-    // Handle preview playback
+
+    // Check if this is an S3 video (needs time control)
+    const isS3Video = video.provider === 's3';
+    const [videoLoaded, setVideoLoaded] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    // Detect Edge browser
+    const isEdge = typeof navigator !== 'undefined' && /Edg/.test(navigator.userAgent);
+
+    // Handle preview playback with proper loading state management
     useEffect(() => {
-        if (showPreview && videoRef.current && previewUrl) {
-            videoRef.current.load(); // Ensure fresh load
-            const playPromise = videoRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log('Preview playback failed for:', video.title?.substring(0, 30), error.message);
-                    // On playback failure, hide the preview and show thumbnail instead
-                    setShowPreview(false);
-                });
+        const videoElement = videoRef.current;
+        if (!videoElement || !previewUrl) return;
+
+        // Handler for when video is ready to play
+        const handleCanPlay = () => {
+            setVideoLoaded(true);
+
+            // Only auto-play if we're still showing preview
+            if (showPreview && !isPlaying) {
+                const playPromise = videoElement.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            setIsPlaying(true);
+                        })
+                        .catch(error => {
+                            console.log('Preview playback failed for:', video.title?.substring(0, 30), error.message);
+
+                            // Check if it's a CORS error (common with S3)
+                            if (error.name === 'NotAllowedError' || error.message.includes('CORS')) {
+                                setCorsError(true);
+                                console.warn('CORS issue detected. S3 bucket may need CORS configuration.');
+                            }
+
+                            // On playback failure, hide the preview and show thumbnail instead
+                            setShowPreview(false);
+                            setIsPlaying(false);
+                        });
+                }
             }
-        } else if (!showPreview && videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.currentTime = 0;
+        };
+
+        // Handler for time updates (S3 looping)
+        const handleTimeUpdate = () => {
+            if (isS3Video && videoElement.currentTime >= 5) {
+                videoElement.currentTime = 0; // Loop back to start
+            }
+        };
+
+        // Handler for errors
+        const handleError = () => {
+            console.warn('Video error during preview:', video.title?.substring(0, 30));
+            setShowPreview(false);
+            setVideoLoaded(false);
+            setIsPlaying(false);
+        };
+
+        if (showPreview) {
+            // If video not loaded yet, start loading
+            if (!videoLoaded) {
+                // Reset to beginning
+                videoElement.currentTime = 0;
+
+                // Add event listeners
+                videoElement.addEventListener('canplay', handleCanPlay);
+                videoElement.addEventListener('error', handleError);
+
+                // Only call load() if the video hasn't been loaded yet
+                if (videoElement.readyState < 3) { // HAVE_FUTURE_DATA
+                    videoElement.load();
+                }
+            } else {
+                // Video already loaded, just play it
+                if (!isPlaying) {
+                    videoElement.currentTime = 0;
+                    videoElement.play()
+                        .then(() => setIsPlaying(true))
+                        .catch(() => {
+                            setShowPreview(false);
+                            setIsPlaying(false);
+                        });
+                }
+            }
+
+            // Add time update listener for S3 videos
+            if (isS3Video) {
+                videoElement.addEventListener('timeupdate', handleTimeUpdate);
+            }
+
+            // Cleanup function
+            return () => {
+                videoElement.removeEventListener('canplay', handleCanPlay);
+                videoElement.removeEventListener('error', handleError);
+                if (isS3Video) {
+                    videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+                }
+            };
+        } else {
+            // Not showing preview - pause and reset
+            if (videoElement && isPlaying) {
+                videoElement.pause();
+                videoElement.currentTime = 0;
+                setIsPlaying(false);
+            }
         }
-    }, [showPreview, previewUrl, video.title]);
+    }, [showPreview, previewUrl, video.title, isS3Video, videoLoaded, isPlaying]);
 
     const handleMouseEnter = () => {
         setIsHovering(true);
@@ -110,14 +201,29 @@ export default function VideoCardWithPreview({ video }) {
                         <video
                             ref={videoRef}
                             src={previewUrl}
-                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${showPreview ? 'opacity-100' : 'opacity-0'
+                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${showPreview && isPlaying ? 'opacity-100' : 'opacity-0'
                                 }`}
+                            style={{ backgroundColor: 'transparent' }} // Prevent black background
                             muted
-                            loop
+                            loop={!isS3Video} // S3 videos use manual looping via timeupdate
                             playsInline
+                            preload="metadata" // Preload metadata for smoother start
+                            crossOrigin={isEdge ? undefined : "anonymous"} // Edge has CORS issues, disable for now
+                            type="video/mp4" // Explicit type for better Edge compatibility
                             onError={(e) => {
-                                console.warn('Preview video failed to load:', video.title?.substring(0, 30), previewUrl.substring(0, 60));
+                                const errorMsg = e.target.error ? e.target.error.message : 'Unknown error';
+                                console.warn('Preview video failed to load:', video.title?.substring(0, 30), errorMsg);
+                                console.warn('Preview URL:', previewUrl.substring(0, 60));
+
+                                // Check for CORS-specific errors
+                                if (errorMsg.includes('CORS') || e.target.error?.code === 4) {
+                                    console.error('CORS Error: S3 bucket needs CORS policy. See docs for configuration.');
+                                    setCorsError(true);
+                                }
+
                                 setShowPreview(false); // Fallback to thumbnail
+                                setIsPlaying(false);
+                                setVideoLoaded(false);
                             }}
                         />
                     )}

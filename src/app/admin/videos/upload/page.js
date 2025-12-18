@@ -35,6 +35,26 @@ export default function UploadVideoPage() {
         else setThumbnailFile(file);
     };
 
+    // Helper function to get video duration from file
+    const getVideoDuration = (file) => {
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+
+            video.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(video.src);
+                resolve(video.duration);
+            };
+
+            video.onerror = () => {
+                window.URL.revokeObjectURL(video.src);
+                reject(new Error('Failed to load video metadata'));
+            };
+
+            video.src = URL.createObjectURL(file);
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!videoFile) return alert('Please select a video file');
@@ -70,13 +90,31 @@ export default function UploadVideoPage() {
             let videoData = {};
 
             if (formData.provider === 's3') {
-                // AWS S3 Flow
-                setStatus('Getting S3 signature...');
-                const signRes = await fetch(`/api/upload/sign?provider=s3&file_name=${encodeURIComponent(videoFile.name)}&file_type=${encodeURIComponent(videoFile.type)}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                // Extract video duration before upload
+                setStatus('Extracting video metadata...');
+                let videoDuration = 0;
+                try {
+                    videoDuration = await getVideoDuration(videoFile);
+                    console.log('✅ Video duration extracted:', videoDuration, 'seconds');
+                } catch (error) {
+                    console.warn('⚠️ Could not extract video duration:', error.message);
+                    // Continue with 0 if extraction fails
+                }
 
-                if (!signRes.ok) throw new Error('Failed to sign upload');
+                // AWS S3 Flow
+                setStatus('Requesting S3 upload URL...');
+                const signRes = await fetch('/api/upload/sign-s3', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        fileName: videoFile.name,
+                        fileType: videoFile.type,
+                    }),
+                });
+                if (!signRes.ok) throw new Error('Failed to get S3 upload URL');
                 const { uploadUrl, publicUrl, key, bucket } = await signRes.json();
 
                 setStatus('Uploading to AWS S3...');
@@ -94,7 +132,7 @@ export default function UploadVideoPage() {
                     s3Key: key,
                     s3Bucket: bucket || process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME || 'ethioxhub',
                     videoUrl: publicUrl,
-                    duration: 0
+                    duration: videoDuration  // Use extracted duration instead of 0
                 };
 
             } else {
