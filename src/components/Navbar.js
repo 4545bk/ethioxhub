@@ -20,6 +20,9 @@ export default function Navbar() {
 
     const isAdminPage = pathname?.startsWith('/admin');
     const isSubscriber = user && (user.isSubscriber || (user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date()));
+    const daysRemaining = user?.subscriptionExpiresAt
+        ? Math.ceil((new Date(user.subscriptionExpiresAt) - new Date()) / (1000 * 60 * 60 * 24))
+        : 0;
 
     useEffect(() => {
         if (user) {
@@ -164,6 +167,26 @@ export default function Navbar() {
                                                             )}
                                                         </div>
                                                         <p className="text-gray-400 text-xs">{user.email}</p>
+
+                                                        {isSubscriber && (
+                                                            <div className="mt-3 mb-2 bg-gradient-to-br from-gray-800 to-gray-800/50 rounded-lg p-2.5 border border-yellow-500/20 shadow-inner">
+                                                                <div className="flex justify-between items-center mb-1">
+                                                                    <span className="text-[10px] uppercase font-bold text-yellow-500 tracking-wider">
+                                                                        {user.subscriptionPlan || 'VIP Plan'}
+                                                                    </span>
+                                                                    <span className={`text-[10px] font-bold ${daysRemaining <= 5 ? 'text-red-400' : 'text-green-400'}`}>
+                                                                        {daysRemaining} Days Left
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-[10px] text-gray-400">Expires</span>
+                                                                    <span className="text-[10px] text-gray-300 font-medium">
+                                                                        {new Date(user.subscriptionExpiresAt).toLocaleDateString()}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
                                                         {!isAdminPage && (
                                                             <div className="mt-2 flex items-center gap-1 text-yellow-500 text-sm">
                                                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -256,6 +279,26 @@ export default function Navbar() {
                                             <p className="text-xs text-gray-400">{user.email}</p>
                                         </div>
                                     </div>
+
+                                    {isSubscriber && (
+                                        <div className="mb-3 bg-gray-900/50 rounded-lg p-3 border border-yellow-500/20">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="text-xs uppercase font-bold text-yellow-500 tracking-wider">
+                                                    {user.subscriptionPlan || 'VIP Plan'}
+                                                </span>
+                                                <span className={`text-xs font-bold ${daysRemaining <= 5 ? 'text-red-400' : 'text-green-400'}`}>
+                                                    {daysRemaining} Days Left
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs text-gray-400">Expires</span>
+                                                <span className="text-xs text-gray-300 font-medium">
+                                                    {new Date(user.subscriptionExpiresAt).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {!isAdminPage && (
                                         <div className="flex items-center gap-2 text-yellow-400 font-bold bg-black/30 p-2 rounded">
                                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
