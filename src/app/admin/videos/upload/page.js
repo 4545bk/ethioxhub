@@ -102,19 +102,12 @@ export default function UploadVideoPage() {
                 }
 
                 // AWS S3 Flow
-                setStatus('Requesting S3 upload URL...');
-                const signRes = await fetch('/api/upload/sign-s3', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        fileName: videoFile.name,
-                        fileType: videoFile.type,
-                    }),
+                setStatus('Getting S3 signature...');
+                const signRes = await fetch(`/api/upload/sign?provider=s3&file_name=${encodeURIComponent(videoFile.name)}&file_type=${encodeURIComponent(videoFile.type)}`, {
+                    headers: { Authorization: `Bearer ${token}` }
                 });
-                if (!signRes.ok) throw new Error('Failed to get S3 upload URL');
+
+                if (!signRes.ok) throw new Error('Failed to sign upload');
                 const { uploadUrl, publicUrl, key, bucket } = await signRes.json();
 
                 setStatus('Uploading to AWS S3...');
