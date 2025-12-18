@@ -4,14 +4,17 @@ import Photo from '../../../models/Photo';
 
 export async function generateMetadata({ params }) {
     try {
-        // race condition: timeout after 4s to prevent hanging
-        const dbPromise = connectDB();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), 4000));
-        await Promise.race([dbPromise, timeoutPromise]);
+        // Simple connection without aggressive timeout
+        await connectDB();
 
         const photo = await Photo.findById(params.id).select('title description url thumbnailUrl album isPaid price');
 
-        if (!photo) throw new Error('Photo not found');
+        if (!photo) {
+            return {
+                title: 'Photo Not Found - EthioxHub',
+                description: 'The requested photo could not be found.',
+            };
+        }
 
         const title = photo.title || 'EthioxHub Photo';
         const description = photo.description || 'Exclusive content on EthioxHub';
@@ -25,11 +28,12 @@ export async function generateMetadata({ params }) {
             }
         }
 
+        // Fallback for missing image
         if (!imageUrl) {
             imageUrl = 'https://placehold.co/1200x630/111827/FFD700/png?text=EthioxHub&font=roboto';
         }
 
-        // VIP Logic
+        // VIP Logic (Cloudinary Blur or S3 Fallback)
         if (photo.isPaid) {
             if (imageUrl && imageUrl.includes('cloudinary.com')) {
                 const price = (photo.price / 100).toFixed(2);
@@ -66,9 +70,8 @@ export async function generateMetadata({ params }) {
         };
     } catch (error) {
         console.error('Metadata error:', error);
-        // GUARANTEED FALLBACK
         return {
-            title: 'EthioxHub - Exclusive Content',
+            title: 'EthioxHub Gallery',
             description: 'Check out this photo on EthioxHub',
             openGraph: {
                 images: ['https://placehold.co/1200x630/111827/FFD700/png?text=EthioxHub&font=roboto']
