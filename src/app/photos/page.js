@@ -16,6 +16,7 @@ export default function PhotosPage() {
     const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [purchaseModal, setPurchaseModal] = useState(null);
+    const [showLowBalanceModal, setShowLowBalanceModal] = useState(false);
     const [processingPurchase, setProcessingPurchase] = useState(false);
     const toast = useToast();
 
@@ -111,9 +112,11 @@ export default function PhotosPage() {
                 fetchPhotos();
 
                 setPurchaseModal(null);
+                setPurchaseModal(null);
             } else {
                 if (res.status === 402) {
-                    toast.error('Insufficient balance. Please deposit funds.');
+                    setPurchaseModal(null);
+                    setShowLowBalanceModal(true);
                 } else {
                     toast.error(data.error || 'Failed to purchase');
                 }
@@ -376,6 +379,63 @@ export default function PhotosPage() {
                                             'Unlock Now'
                                         )}
                                     </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Insufficient Balance Modal */}
+                <AnimatePresence>
+                    {showLowBalanceModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                            onClick={() => setShowLowBalanceModal(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                className="bg-dark-900 border border-dark-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+
+                                <h3 className="text-xl font-bold text-white mb-2">Insufficient Balance</h3>
+                                <p className="text-gray-400 mb-6">
+                                    You don't have enough balance to unlock this content. Please deposit funds to continue.
+                                </p>
+
+                                <div className="bg-dark-800 rounded-xl p-4 mb-6 border border-dark-700">
+                                    <span className="text-gray-500 text-sm font-medium">Current Balance</span>
+                                    <div className="text-3xl font-bold text-white mt-1">
+                                        {(user?.balance / 100).toFixed(2)} <span className="text-lg text-yellow-500">ETB</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowLowBalanceModal(false)}
+                                        className="flex-1 px-4 py-2.5 rounded-xl bg-dark-800 text-gray-300 font-medium hover:bg-dark-700 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <Link
+                                        href="/my-deposits"
+                                        className="flex-1 px-4 py-2.5 rounded-xl bg-yellow-500 text-black font-bold hover:bg-yellow-400 transition flex items-center justify-center gap-2"
+                                    >
+                                        Deposit Funds
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                        </svg>
+                                    </Link>
                                 </div>
                             </motion.div>
                         </motion.div>
