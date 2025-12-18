@@ -93,6 +93,10 @@ const UserSchema = new mongoose.Schema(
         subscriptionExpiresAt: {
             type: Date
         },
+        subscriptionPlan: {
+            type: String,
+            enum: ['Monthly', 'Bi-Monthly', 'Quarterly'],
+        },
         // Referral System
         referralCode: {
             type: String,

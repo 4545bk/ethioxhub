@@ -13,8 +13,11 @@ import Transaction from '@/models/Transaction';
 import { requireAuth } from '@/lib/middleware';
 import mongoose from 'mongoose';
 
-const SUBSCRIPTION_PRICE_CENTS = parseInt(process.env.SUBSCRIPTION_PRICE_CENTS) || 100000; // 1000 ETB
-const SUBSCRIPTION_DURATION_DAYS = 30;
+const PLANS = {
+    '1-month': { name: 'Monthly', price: 100000, days: 30 },
+    '2-month': { name: 'Bi-Monthly', price: 180000, days: 60 },
+    '3-month': { name: 'Quarterly', price: 255000, days: 90 }
+};
 
 export async function POST(request) {
     const session = await mongoose.startSession();
@@ -32,6 +35,21 @@ export async function POST(request) {
                 { error: 'Unauthorized' },
                 { status: 401 }
             );
+        }
+
+        // Parse Plan
+        let body = {};
+        try {
+            body = await request.json();
+        } catch (e) { }
+
+        const planKey = body.duration || '1-month';
+        const plan = PLANS[planKey];
+
+        if (!plan) {
+            await session.abortTransaction();
+            session.endSession();
+            return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
         }
 
         const userId = user._id;
@@ -64,13 +82,13 @@ export async function POST(request) {
         }
 
         // Check balance
-        if (userDoc.balance < SUBSCRIPTION_PRICE_CENTS) {
+        if (userDoc.balance < plan.price) {
             await session.abortTransaction();
             session.endSession();
             return NextResponse.json(
                 {
                     error: 'Insufficient balance',
-                    required: SUBSCRIPTION_PRICE_CENTS,
+                    required: plan.price,
                     available: userDoc.balance,
                 },
                 { status: 402 }
@@ -80,20 +98,21 @@ export async function POST(request) {
         const beforeBalance = userDoc.balance;
 
         // Deduct balance
-        userDoc.balance -= SUBSCRIPTION_PRICE_CENTS;
+        userDoc.balance -= plan.price;
 
-        // Set subscription expiry (30 days from now or extend existing)
+        // Set subscription expiry
         const now = new Date();
         const currentExpiry = userDoc.subscriptionExpiresAt && userDoc.subscriptionExpiresAt > now
             ? userDoc.subscriptionExpiresAt
             : now;
 
-        userDoc.subscriptionExpiresAt = new Date(currentExpiry.getTime() + SUBSCRIPTION_DURATION_DAYS * 24 * 60 * 60 * 1000);
+        userDoc.subscriptionExpiresAt = new Date(currentExpiry.getTime() + plan.days * 24 * 60 * 60 * 1000);
+        userDoc.subscriptionPlan = plan.name; // Save Plan Name
 
         // Add notification to user
         userDoc.notifications.push({
             type: 'success',
-            message: `🎉 Premium subscription activated! Enjoy unlimited access to all content for 30 days. Your subscription expires on ${userDoc.subscriptionExpiresAt.toLocaleDateString()}.`,
+            message: `🎉 ${plan.name} subscription activated! Enjoy unlimited access to all content for ${plan.days} days. Your subscription expires on ${userDoc.subscriptionExpiresAt.toLocaleDateString()}.`,
             read: false,
             createdAt: new Date()
         });
@@ -105,13 +124,14 @@ export async function POST(request) {
             userId: userId,
             type: 'subscription',
             status: 'approved',
-            amount: SUBSCRIPTION_PRICE_CENTS,
+            amount: plan.price,
             beforeBalance,
             afterBalance: userDoc.balance,
             approvedAt: new Date(),
             metadata: {
-                subscriptionDuration: SUBSCRIPTION_DURATION_DAYS,
+                subscriptionDuration: plan.days,
                 expiresAt: userDoc.subscriptionExpiresAt,
+                plan: plan.name
             }
         }], { session });
 
@@ -123,8 +143,9 @@ export async function POST(request) {
             message: 'Subscription activated',
             subscription: {
                 expiresAt: userDoc.subscriptionExpiresAt,
-                durationDays: SUBSCRIPTION_DURATION_DAYS,
-                price: SUBSCRIPTION_PRICE_CENTS,
+                durationDays: plan.days,
+                price: plan.price,
+                plan: plan.name
             },
             newBalance: userDoc.balance,
             transaction: transaction[0],
