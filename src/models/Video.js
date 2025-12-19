@@ -110,8 +110,13 @@ const VideoSchema = new mongoose.Schema(
         // Processing and moderation status
         status: {
             type: String,
-            enum: ['uploaded', 'processing', 'pending_moderation', 'approved', 'rejected', 'deleted'],
+            enum: ['uploaded', 'processing', 'pending_moderation', 'approved', 'rejected', 'deleted', 'scheduled'],
             default: 'uploaded',
+            index: true,
+        },
+        // Scheduled publishing
+        scheduledPublishAt: {
+            type: Date,
             index: true,
         },
         moderationFlags: {
