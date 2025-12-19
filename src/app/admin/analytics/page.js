@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import AdminSidebar from '@/components/AdminSidebar';
+import AdminSidebar from '../../../components/AdminSidebar';
 
 // Helper to format seconds into readable duration
 const formatDuration = (seconds) => {
