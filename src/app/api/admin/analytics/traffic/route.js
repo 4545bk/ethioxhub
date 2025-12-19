@@ -117,6 +117,56 @@ export async function GET(request) {
             ? Math.round(pagesPerSessionAgg[0].avgPages * 10) / 10
             : 0;
 
+        // Top countries
+        const topCountries = await AnalyticsEvent.aggregate([
+            {
+                $match: {
+                    type: 'page_view',
+                    createdAt: { $gte: startDate },
+                    country: { $exists: true, $ne: 'Unknown' }
+                }
+            },
+            {
+                $group: {
+                    _id: '$country',
+                    visitors: { $addToSet: '$sessionId' }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    count: { $size: '$visitors' }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Top cities
+        const topCities = await AnalyticsEvent.aggregate([
+            {
+                $match: {
+                    type: 'page_view',
+                    createdAt: { $gte: startDate },
+                    city: { $exists: true, $ne: 'Unknown' }
+                }
+            },
+            {
+                $group: {
+                    _id: { city: '$city', country: '$country' },
+                    visitors: { $addToSet: '$sessionId' }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    count: { $size: '$visitors' }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
         return NextResponse.json({
             success: true,
             period: `${days} days`,
@@ -126,7 +176,9 @@ export async function GET(request) {
                 avgSessionDuration, // in seconds
                 avgPagesPerSession,
                 pageViewsByDay,
-                topPages
+                topPages,
+                topCountries,
+                topCities
             }
         });
 

@@ -16,6 +16,11 @@ export async function POST(request) {
             request.headers.get('x-real-ip') ||
             'unknown';
 
+        // Get location from Vercel geo headers (free, automatic)
+        const country = request.headers.get('x-vercel-ip-country') || 'Unknown';
+        const city = request.headers.get('x-vercel-ip-city') || 'Unknown';
+        const region = request.headers.get('x-vercel-ip-country-region') || '';
+
         // Create analytics event
         const event = await AnalyticsEvent.create({
             type: type || 'page_view',
@@ -25,7 +30,9 @@ export async function POST(request) {
             userAgent,
             referrer,
             ip,
-            metadata: body.metadata || {}
+            country,
+            city,
+            metadata: { ...body.metadata, region }
         });
 
         return NextResponse.json({ success: true, eventId: event._id });

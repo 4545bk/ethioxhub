@@ -14,6 +14,20 @@ const formatDuration = (seconds) => {
     return `${mins}m ${secs}s`;
 };
 
+// Helper to get country flag emoji from country code
+const getCountryFlag = (countryCode) => {
+    if (!countryCode || countryCode === 'Unknown') return '🌍';
+    const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+    try {
+        return String.fromCodePoint(...codePoints);
+    } catch {
+        return '🌍';
+    }
+};
+
 export default function AnalyticsPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
@@ -221,6 +235,92 @@ export default function AnalyticsPage() {
                                         </div>
                                     );
                                 })}
+                            </div>
+                        </div>
+
+                        {/* Location Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Top Countries */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <h2 className="text-lg font-bold text-gray-800">Top Countries</h2>
+                                </div>
+                                <div className="space-y-3">
+                                    {stats?.topCountries?.length > 0 ? (
+                                        stats.topCountries.map((country, index) => {
+                                            const maxCount = stats.topCountries[0]?.count || 1;
+                                            const percentage = (country.count / maxCount) * 100;
+                                            const countryCode = country._id || 'Unknown';
+                                            const flag = getCountryFlag(countryCode);
+
+                                            return (
+                                                <div key={index} className="flex items-center gap-3">
+                                                    <span className="text-xl">{flag}</span>
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between mb-1">
+                                                            <span className="text-sm font-medium text-gray-700">{countryCode}</span>
+                                                            <span className="text-sm font-bold text-gray-900">{country.count}</span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                                            <div
+                                                                className="bg-gradient-to-r from-blue-500 to-cyan-500 h-1.5 rounded-full"
+                                                                style={{ width: `${percentage}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-gray-500 text-sm">No location data yet</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Top Cities */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <h2 className="text-lg font-bold text-gray-800">Top Cities</h2>
+                                </div>
+                                <div className="space-y-3">
+                                    {stats?.topCities?.length > 0 ? (
+                                        stats.topCities.map((city, index) => {
+                                            const maxCount = stats.topCities[0]?.count || 1;
+                                            const percentage = (city.count / maxCount) * 100;
+                                            const cityName = city._id?.city || 'Unknown';
+                                            const countryCode = city._id?.country || '';
+
+                                            return (
+                                                <div key={index} className="flex items-center gap-3">
+                                                    <span className="text-sm font-bold text-gray-400 w-5">{index + 1}</span>
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between mb-1">
+                                                            <span className="text-sm font-medium text-gray-700">
+                                                                {cityName}{countryCode && `, ${countryCode}`}
+                                                            </span>
+                                                            <span className="text-sm font-bold text-gray-900">{city.count}</span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                                            <div
+                                                                className="bg-gradient-to-r from-purple-500 to-pink-500 h-1.5 rounded-full"
+                                                                style={{ width: `${percentage}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-gray-500 text-sm">No location data yet</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
