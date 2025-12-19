@@ -66,12 +66,65 @@ export async function GET(request) {
             { $limit: 10 }
         ]);
 
+        // Average session duration (from page_leave events with duration)
+        const sessionDurationAgg = await AnalyticsEvent.aggregate([
+            {
+                $match: {
+                    type: 'page_leave',
+                    createdAt: { $gte: startDate },
+                    'metadata.duration': { $exists: true }
+                }
+            },
+            {
+                $group: {
+                    _id: '$sessionId',
+                    totalDuration: { $sum: { $toInt: '$metadata.duration' } }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    avgDuration: { $avg: '$totalDuration' }
+                }
+            }
+        ]);
+        const avgSessionDuration = sessionDurationAgg.length > 0
+            ? Math.round(sessionDurationAgg[0].avgDuration)
+            : 0;
+
+        // Pages per session
+        const pagesPerSessionAgg = await AnalyticsEvent.aggregate([
+            {
+                $match: {
+                    type: 'page_view',
+                    createdAt: { $gte: startDate }
+                }
+            },
+            {
+                $group: {
+                    _id: '$sessionId',
+                    pageCount: { $sum: 1 }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    avgPages: { $avg: '$pageCount' }
+                }
+            }
+        ]);
+        const avgPagesPerSession = pagesPerSessionAgg.length > 0
+            ? Math.round(pagesPerSessionAgg[0].avgPages * 10) / 10
+            : 0;
+
         return NextResponse.json({
             success: true,
             period: `${days} days`,
             stats: {
                 totalPageViews,
                 uniqueVisitors: uniqueVisitors.length,
+                avgSessionDuration, // in seconds
+                avgPagesPerSession,
                 pageViewsByDay,
                 topPages
             }

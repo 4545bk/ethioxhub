@@ -5,6 +5,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/AdminSidebar';
 
+// Helper to format seconds into readable duration
+const formatDuration = (seconds) => {
+    if (!seconds || seconds < 1) return '0s';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    if (mins === 0) return `${secs}s`;
+    return `${mins}m ${secs}s`;
+};
+
 export default function AnalyticsPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
@@ -122,13 +131,15 @@ export default function AnalyticsPage() {
                                 </div>
                             </div>
 
-                            {/* Avg Time (Placeholder) */}
+                            {/* Avg Session Duration */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-500 uppercase">Avg Session</p>
-                                        <p className="text-3xl font-bold text-gray-900 mt-2">Coming Soon</p>
-                                        <p className="text-xs text-gray-400 mt-1">Phase 3</p>
+                                        <p className="text-3xl font-bold text-gray-900 mt-2">
+                                            {stats?.avgSessionDuration ? formatDuration(stats.avgSessionDuration) : '0s'}
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1">Time on site</p>
                                     </div>
                                     <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                                         <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,17 +149,19 @@ export default function AnalyticsPage() {
                                 </div>
                             </div>
 
-                            {/* Bounce Rate (Placeholder) */}
+                            {/* Pages Per Session */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-gray-500 uppercase">Location Data</p>
-                                        <p className="text-3xl font-bold text-gray-900 mt-2">Coming Soon</p>
-                                        <p className="text-xs text-gray-400 mt-1">Phase 4</p>
+                                        <p className="text-sm font-medium text-gray-500 uppercase">Pages/Session</p>
+                                        <p className="text-3xl font-bold text-gray-900 mt-2">
+                                            {stats?.avgPagesPerSession || '0'}
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1">Engagement</p>
                                     </div>
                                     <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                                         <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                     </div>
                                 </div>
