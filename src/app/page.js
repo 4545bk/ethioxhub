@@ -2,13 +2,13 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Navbar from '@/components/Navbar';
-import VideoCardWithPreview from '@/components/VideoCardWithPreview';
-import ContinueWatching from '@/components/ContinueWatching';
-import { useFilterVideos } from '@/hooks/useFilterVideos';
-import { useLanguage } from '@/contexts/LanguageContext';
+import Navbar from '../components/Navbar';
+import VideoCardWithPreview from '../components/VideoCardWithPreview';
+import ContinueWatching from '../components/ContinueWatching';
+import { useFilterVideos } from '../hooks/useFilterVideos';
+import { useLanguage } from '../contexts/LanguageContext';
 import { motion } from 'framer-motion';
-import CookieBanner from '@/components/CookieBanner';
+import CookieBanner from '../components/CookieBanner';
 
 function HomePageContent() {
     const { t } = useLanguage();
