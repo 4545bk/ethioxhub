@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Generate or retrieve session ID
+// Generate or retrieve session ID (per browser session)
 const getSessionId = () => {
     if (typeof window === 'undefined') return null;
 
@@ -14,6 +14,27 @@ const getSessionId = () => {
         sessionStorage.setItem('analytics_session_id', sessionId);
     }
     return sessionId;
+};
+
+// Get or create persistent visitor ID (for new vs returning tracking)
+const getVisitorInfo = () => {
+    if (typeof window === 'undefined') return { visitorId: null, isNewVisitor: false };
+
+    const VISITOR_KEY = 'ethioxhub_visitor_id';
+    const FIRST_VISIT_KEY = 'ethioxhub_first_visit';
+
+    let visitorId = localStorage.getItem(VISITOR_KEY);
+    let isNewVisitor = false;
+
+    if (!visitorId) {
+        // First time visitor
+        visitorId = `v_${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem(VISITOR_KEY, visitorId);
+        localStorage.setItem(FIRST_VISIT_KEY, new Date().toISOString());
+        isNewVisitor = true;
+    }
+
+    return { visitorId, isNewVisitor };
 };
 
 export default function AnalyticsTracker() {
@@ -76,6 +97,7 @@ export default function AnalyticsTracker() {
 async function trackEvent(type, page, metadata = {}) {
     try {
         const sessionId = getSessionId();
+        const { visitorId, isNewVisitor } = getVisitorInfo();
 
         await fetch('/api/analytics/track', {
             method: 'POST',
@@ -84,6 +106,8 @@ async function trackEvent(type, page, metadata = {}) {
                 type,
                 page,
                 sessionId,
+                visitorId,
+                isNewVisitor,
                 metadata
             })
         });

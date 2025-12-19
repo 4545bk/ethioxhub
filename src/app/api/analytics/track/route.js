@@ -7,7 +7,7 @@ export async function POST(request) {
         await connectDB();
 
         const body = await request.json();
-        const { type, page, sessionId, userId } = body;
+        const { type, page, sessionId, userId, visitorId, isNewVisitor } = body;
 
         // Get client info
         const userAgent = request.headers.get('user-agent') || '';
@@ -32,7 +32,12 @@ export async function POST(request) {
             ip,
             country,
             city,
-            metadata: { ...body.metadata, region }
+            metadata: {
+                ...body.metadata,
+                region,
+                visitorId: visitorId || null,
+                isNewVisitor: isNewVisitor || false
+            }
         });
 
         return NextResponse.json({ success: true, eventId: event._id });

@@ -182,6 +182,71 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
 
+                        {/* New vs Returning Visitors */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h2 className="text-lg font-bold text-gray-800 mb-4">New vs Returning Visitors</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Stats */}
+                                <div className="flex items-center gap-8">
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-2xl font-bold text-gray-900">{stats?.newVisitors || 0}</p>
+                                        <p className="text-sm text-gray-500">New Visitors</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                            <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-2xl font-bold text-gray-900">{stats?.returningVisitors || 0}</p>
+                                        <p className="text-sm text-gray-500">Returning</p>
+                                    </div>
+                                </div>
+
+                                {/* Visual Bar */}
+                                <div className="flex flex-col justify-center">
+                                    <div className="flex h-8 rounded-full overflow-hidden bg-gray-200">
+                                        {(() => {
+                                            const total = (stats?.newVisitors || 0) + (stats?.returningVisitors || 0);
+                                            const newPct = total > 0 ? ((stats?.newVisitors || 0) / total) * 100 : 50;
+                                            const retPct = total > 0 ? ((stats?.returningVisitors || 0) / total) * 100 : 50;
+                                            return (
+                                                <>
+                                                    <div
+                                                        className="bg-gradient-to-r from-green-500 to-green-400 flex items-center justify-center text-white text-xs font-bold"
+                                                        style={{ width: `${newPct}%` }}
+                                                    >
+                                                        {total > 0 && `${Math.round(newPct)}%`}
+                                                    </div>
+                                                    <div
+                                                        className="bg-gradient-to-r from-blue-500 to-blue-400 flex items-center justify-center text-white text-xs font-bold"
+                                                        style={{ width: `${retPct}%` }}
+                                                    >
+                                                        {total > 0 && `${Math.round(retPct)}%`}
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                    <div className="flex justify-between mt-2 text-xs">
+                                        <span className="flex items-center gap-1">
+                                            <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                            New
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                            <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
+                                            Returning
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Traffic Chart */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                             <h2 className="text-lg font-bold text-gray-800 mb-4">Traffic Over Time</h2>

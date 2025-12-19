@@ -167,6 +167,21 @@ export async function GET(request) {
             { $limit: 10 }
         ]);
 
+        // New vs Returning visitors
+        const newVisitorsCount = await AnalyticsEvent.countDocuments({
+            type: 'page_view',
+            createdAt: { $gte: startDate },
+            'metadata.isNewVisitor': true
+        });
+
+        // Get unique returning visitors (have visitorId but not new)
+        const returningVisitors = await AnalyticsEvent.distinct('metadata.visitorId', {
+            type: 'page_view',
+            createdAt: { $gte: startDate },
+            'metadata.isNewVisitor': { $ne: true },
+            'metadata.visitorId': { $exists: true, $ne: null }
+        });
+
         return NextResponse.json({
             success: true,
             period: `${days} days`,
@@ -175,6 +190,8 @@ export async function GET(request) {
                 uniqueVisitors: uniqueVisitors.length,
                 avgSessionDuration, // in seconds
                 avgPagesPerSession,
+                newVisitors: newVisitorsCount,
+                returningVisitors: returningVisitors.length,
                 pageViewsByDay,
                 topPages,
                 topCountries,
