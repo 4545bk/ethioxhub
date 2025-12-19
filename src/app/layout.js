@@ -7,7 +7,7 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import Footer from '@/components/Footer';
 import ReferralTracker from '@/components/ReferralTracker';
-import AnalyticsTracker from '@/components/AnalyticsTracker';
+import AnalyticsTracker from '../components/AnalyticsTracker';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
