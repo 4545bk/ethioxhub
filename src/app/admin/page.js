@@ -51,6 +51,12 @@ export default function AdminDashboard() {
     const [thumbnailFile, setThumbnailFile] = useState(null);
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
     const [categories, setCategories] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // Number of videos per page
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab]);
 
     useEffect(() => {
         // Wait for auth to finish loading before redirecting
@@ -419,6 +425,37 @@ export default function AdminDashboard() {
 
     if (!user) return null;
 
+    // Pagination Logic
+    // Pagination Logic
+    const getActiveData = () => {
+        switch (activeTab) {
+            case 'deposits':
+                return deposits;
+            case 'users':
+                return users;
+            case 'allVideos':
+                return allVideos;
+            default:
+                return [];
+        }
+    };
+
+    const activeData = getActiveData();
+    const totalItems = activeData.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = activeData.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) setCurrentPage(prev => prev - 1);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex font-sans text-gray-800">
             {/* Sidebar Reused */}
@@ -583,174 +620,202 @@ export default function AdminDashboard() {
                                 ) : activeTab === 'photos' ? (
                                     <PhotosManager />
                                 ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead>
-                                                <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
-                                                    <th className="pb-3 pl-2">Item Details</th>
-                                                    <th className="pb-3">User</th>
-                                                    <th className="pb-3">Value/Info</th>
-                                                    <th className="pb-3 text-right pr-2">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-50">
-                                                {activeTab === 'deposits' && deposits.map((deposit) => (
-                                                    <tr key={deposit.id} className="hover:bg-gray-50/50 transition-colors">
-                                                        <td className="py-4 pl-2">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 cursor-pointer" onClick={() => window.open(deposit.cloudinaryUrl, '_blank')}>
-                                                                    <img src={deposit.cloudinaryUrl} alt="Receipt" className="w-full h-full object-cover" />
-                                                                </div>
-                                                                <div>
-                                                                    <p className="font-semibold text-gray-800 text-sm">Deposit Request</p>
-                                                                    <p className="text-xs text-gray-500 text-ellipsis max-w-[120px] overflow-hidden whitespace-nowrap">{deposit.metadata?.transactionCode || 'No Code'}</p>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4">
-                                                            <div className="text-sm">
-                                                                <p className="font-medium text-gray-900">{deposit.user?.username}</p>
-                                                                <p className="text-gray-500 text-xs">{deposit.user?.email}</p>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4">
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                {deposit.displayAmount} ETB
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-4 text-right pr-2 space-x-2">
-                                                            <button
-                                                                onClick={() => handleApproveDeposit(deposit.id)}
-                                                                className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors"
-                                                                title="Approve"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleRejectDeposit(deposit.id)}
-                                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                                                                title="Reject"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                            </button>
-                                                        </td>
+                                    <>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
+                                                        <th className="pb-3 pl-2">Item Details</th>
+                                                        <th className="pb-3">User</th>
+                                                        <th className="pb-3">Value/Info</th>
+                                                        <th className="pb-3 text-right pr-2">Actions</th>
                                                     </tr>
-                                                ))}
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-50">
+                                                    {activeTab === 'deposits' && currentItems.map((deposit) => (
+                                                        <tr key={deposit.id} className="hover:bg-gray-50/50 transition-colors">
+                                                            <td className="py-4 pl-2">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 cursor-pointer" onClick={() => window.open(deposit.cloudinaryUrl, '_blank')}>
+                                                                        <img src={deposit.cloudinaryUrl} alt="Receipt" className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="font-semibold text-gray-800 text-sm">Deposit Request</p>
+                                                                        <p className="text-xs text-gray-500 text-ellipsis max-w-[120px] overflow-hidden whitespace-nowrap">{deposit.metadata?.transactionCode || 'No Code'}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4">
+                                                                <div className="text-sm">
+                                                                    <p className="font-medium text-gray-900">{deposit.user?.username}</p>
+                                                                    <p className="text-gray-500 text-xs">{deposit.user?.email}</p>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4">
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                    {deposit.displayAmount} ETB
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-4 text-right pr-2 space-x-2">
+                                                                <button
+                                                                    onClick={() => handleApproveDeposit(deposit.id)}
+                                                                    className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors"
+                                                                    title="Approve"
+                                                                >
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleRejectDeposit(deposit.id)}
+                                                                    className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                                                                    title="Reject"
+                                                                >
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
 
-                                                {activeTab === 'users' && users.map((user) => (
-                                                    <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
-                                                        <td className="py-4 pl-2">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 border border-gray-300 overflow-hidden">
-                                                                    {user.profilePicture ? (
-                                                                        <img src={user.profilePicture} className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        user.username?.[0]?.toUpperCase() || 'U'
+                                                    {activeTab === 'users' && currentItems.map((user) => (
+                                                        <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
+                                                            <td className="py-4 pl-2">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 border border-gray-300 overflow-hidden">
+                                                                        {user.profilePicture ? (
+                                                                            <img src={user.profilePicture} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            user.username?.[0]?.toUpperCase() || 'U'
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="font-semibold text-gray-800 text-sm">{user.username}</p>
+                                                                        <p className="text-xs text-gray-500">{user.email}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4">
+                                                                <div className="flex flex-col gap-1.5 items-start">
+                                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.roles?.includes('admin') ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                                        {user.roles?.join(', ') || 'user'}
+                                                                    </span>
+                                                                    {(user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date()) && (
+                                                                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-1 shadow-sm whitespace-nowrap">
+                                                                            <svg className="w-3 h-3 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                                                            {user.subscriptionPlan || 'VIP'}
+                                                                        </span>
                                                                     )}
                                                                 </div>
-                                                                <div>
-                                                                    <p className="font-semibold text-gray-800 text-sm">{user.username}</p>
-                                                                    <p className="text-xs text-gray-500">{user.email}</p>
+                                                            </td>
+                                                            <td className="py-4">
+                                                                <div className="text-sm">
+                                                                    <p className="text-gray-900 font-medium">{(user.balance / 100).toFixed(2)} ETB</p>
+                                                                    <p className="text-xs text-gray-500">Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4">
-                                                            <div className="flex flex-col gap-1.5 items-start">
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.roles?.includes('admin') ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
-                                                                    {user.roles?.join(', ') || 'user'}
-                                                                </span>
-                                                                {(user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date()) && (
-                                                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-1 shadow-sm whitespace-nowrap">
-                                                                        <svg className="w-3 h-3 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                                                        {user.subscriptionPlan || 'VIP'}
-                                                                    </span>
+                                                            </td>
+                                                            <td className="py-4 text-right pr-2">
+                                                                {!user.roles?.includes('admin') && (
+                                                                    <button
+                                                                        onClick={() => handleDeleteUser(user._id)}
+                                                                        className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                                                                        title="Delete User"
+                                                                    >
+                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                    </button>
                                                                 )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4">
-                                                            <div className="text-sm">
-                                                                <p className="text-gray-900 font-medium">{(user.balance / 100).toFixed(2)} ETB</p>
-                                                                <p className="text-xs text-gray-500">Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4 text-right pr-2">
-                                                            {!user.roles?.includes('admin') && (
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+
+                                                    {activeTab === 'allVideos' && currentItems.map((video) => (
+                                                        <tr key={video._id} className="hover:bg-gray-50/50 transition-colors">
+                                                            <td className="py-4 pl-2">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-16 h-10 bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
+                                                                        <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                    <div className="max-w-[150px]">
+                                                                        <p className="font-semibold text-gray-800 text-sm truncate">{video.title}</p>
+                                                                        <p className="text-xs text-gray-400">{video.views || 0} views</p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4">
+                                                                <div className="text-sm">
+                                                                    <p className="font-medium text-gray-900">{video.owner?.username}</p>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4">
+                                                                {video.isPaid ?
+                                                                    <span className="text-xs font-bold text-orange-600">PAID: {(video.price / 100).toFixed(2)}</span> :
+                                                                    <span className="text-xs font-bold text-green-600">FREE</span>
+                                                                }
+                                                                <p className="text-xs text-gray-400 mt-1">{video.duration ? Math.floor(video.duration / 60) + 'm' : ''}</p>
+                                                            </td>
+                                                            <td className="py-4 text-right pr-2 space-x-2">
+                                                                <Link href={`/videos/${video._id}`}>
+                                                                    <button
+                                                                        className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
+                                                                        title="View Video"
+                                                                    >
+                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                                    </button>
+                                                                </Link>
                                                                 <button
-                                                                    onClick={() => handleDeleteUser(user._id)}
+                                                                    onClick={() => handleEditVideo(video)}
+                                                                    className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors"
+                                                                    title="Edit Video"
+                                                                >
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteVideo(video._id, video.title)}
                                                                     className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                                                                    title="Delete User"
+                                                                    title="Delete Video"
                                                                 >
                                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                                 </button>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-
-                                                {activeTab === 'allVideos' && allVideos.map((video) => (
-                                                    <tr key={video._id} className="hover:bg-gray-50/50 transition-colors">
-                                                        <td className="py-4 pl-2">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-16 h-10 bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
-                                                                    <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
-                                                                </div>
-                                                                <div className="max-w-[150px]">
-                                                                    <p className="font-semibold text-gray-800 text-sm truncate">{video.title}</p>
-                                                                    <p className="text-xs text-gray-400">{video.views || 0} views</p>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4">
-                                                            <div className="text-sm">
-                                                                <p className="font-medium text-gray-900">{video.owner?.username}</p>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4">
-                                                            {video.isPaid ?
-                                                                <span className="text-xs font-bold text-orange-600">PAID: {(video.price / 100).toFixed(2)}</span> :
-                                                                <span className="text-xs font-bold text-green-600">FREE</span>
-                                                            }
-                                                            <p className="text-xs text-gray-400 mt-1">{video.duration ? Math.floor(video.duration / 60) + 'm' : ''}</p>
-                                                        </td>
-                                                        <td className="py-4 text-right pr-2 space-x-2">
-                                                            <Link href={`/videos/${video._id}`}>
-                                                                <button
-                                                                    className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
-                                                                    title="View Video"
-                                                                >
-                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                                </button>
-                                                            </Link>
-                                                            <button
-                                                                onClick={() => handleEditVideo(video)}
-                                                                className="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 p-2 rounded-full transition-colors"
-                                                                title="Edit Video"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteVideo(video._id, video.title)}
-                                                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                                                                title="Delete Video"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-
-                                                {((activeTab === 'deposits' && deposits.length === 0) ||
-                                                    (activeTab === 'videos' && videos.length === 0) ||
-                                                    (activeTab === 'allVideos' && allVideos.length === 0)) && (
-                                                        <tr>
-                                                            <td colSpan="4" className="py-8 text-center text-gray-400 text-sm">
-                                                                No pending items to review.
                                                             </td>
                                                         </tr>
-                                                    )}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                    ))}
+
+                                                    {((activeTab === 'deposits' && currentItems.length === 0) ||
+                                                        (activeTab === 'users' && currentItems.length === 0) ||
+                                                        (activeTab === 'allVideos' && currentItems.length === 0)) && (
+                                                            <tr>
+                                                                <td colSpan="4" className="py-8 text-center text-gray-400 text-sm">
+                                                                    No pending items to review.
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {activeTab !== 'photos' && totalPages > 1 && (
+                                            <div className="flex justify-between items-center mt-4 px-2 border-t border-gray-100 pt-4">
+                                                <div className="text-sm text-gray-500">
+                                                    Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to <span className="font-medium">{Math.min(indexOfLastItem, totalItems)}</span> of <span className="font-medium">{totalItems}</span> items
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={handlePrevPage}
+                                                        disabled={currentPage === 1}
+                                                        className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${currentPage === 1 ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    <div className="text-sm text-gray-600 px-2 min-w-[60px] text-center">
+                                                        {currentPage} / {totalPages}
+                                                    </div>
+                                                    <button
+                                                        onClick={handleNextPage}
+                                                        disabled={currentPage === totalPages}
+                                                        className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${currentPage === totalPages ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useNotification } from '@/contexts/NotificationContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 export default function NotificationBell() {
     const { notifications, hasUnread, markAsRead } = useNotification();

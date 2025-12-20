@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/middleware';
+import { requireAuth } from '../../../../lib/middleware';
 
 export async function GET(request) {
     try {

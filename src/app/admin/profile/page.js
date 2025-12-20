@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function AdminProfilePage() {
     const { user, refreshUser } = useAuth();
+    const { success, error } = useToast();
+    const [username, setUsername] = useState('');
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState('');
     const [uploading, setUploading] = useState(false);
@@ -14,6 +17,7 @@ export default function AdminProfilePage() {
     useEffect(() => {
         if (user) {
             setCurrentPic(user.profilePicture || '');
+            setUsername(user.username || '');
         }
     }, [user]);
 
@@ -25,64 +29,72 @@ export default function AdminProfilePage() {
         }
     };
 
-    const handleUpload = async () => {
-        if (!file) return;
+    const handleSave = async () => {
+        if (!file && (!username || username === user?.username)) return;
 
         setUploading(true);
         try {
             const token = localStorage.getItem('accessToken');
+            let imageUrl = currentPic;
 
-            // 1. Get Signature
-            const signRes = await fetch('/api/upload/sign?resource_type=image', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // Upload image if selected
+            if (file) {
+                // 1. Get Signature
+                const signRes = await fetch('/api/upload/sign?resource_type=image', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
 
-            if (!signRes.ok) {
-                if (signRes.status === 401) throw new Error('Session expired');
-                throw new Error('Failed to get signature');
+                if (!signRes.ok) {
+                    if (signRes.status === 401) throw new Error('Session expired');
+                    throw new Error('Failed to get signature');
+                }
+
+                const params = await signRes.json();
+
+                // 2. Upload to Cloudinary
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('api_key', params.apiKey);
+                formData.append('timestamp', params.timestamp);
+                formData.append('signature', params.signature);
+                formData.append('folder', params.folder || 'ethioxhub_avatars');
+
+                const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${params.cloudName}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadRes.ok) throw new Error('Upload failed');
+                const result = await uploadRes.json();
+                imageUrl = result.secure_url;
             }
 
-            const params = await signRes.json();
-
-            // 2. Upload to Cloudinary
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('api_key', params.apiKey);
-            formData.append('timestamp', params.timestamp);
-            formData.append('signature', params.signature);
-            formData.append('folder', params.folder || 'ethioxhub_avatars');
-
-            const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${params.cloudName}/image/upload`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!uploadRes.ok) throw new Error('Upload failed');
-            const result = await uploadRes.json();
-            const imageUrl = result.secure_url;
-
-            // 3. Save to User Profile
+            // 3. Save to User Profile (Both Username & Picture)
             const updateRes = await fetch('/api/user/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({ profilePicture: imageUrl })
+                body: JSON.stringify({
+                    profilePicture: imageUrl,
+                    username: username
+                })
             });
 
             if (updateRes.ok) {
-                alert('Profile picture updated successfully!');
+                success('Profile updated successfully!');
                 await refreshUser(); // Update info without reload
                 setFile(null);
                 setPreview('');
             } else {
-                throw new Error('Failed to update profile');
+                const errorData = await updateRes.json();
+                throw new Error(errorData.error || 'Failed to update profile');
             }
 
         } catch (err) {
             console.error(err);
-            alert('Error updating profile: ' + err.message);
+            error(err.message || 'Error updating profile');
         } finally {
             setUploading(false);
         }
@@ -166,6 +178,18 @@ export default function AdminProfilePage() {
                                     </div>
 
                                     <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                        <input
+                                            type="text"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                            placeholder="Enter your username"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">This is how you will be identified on the site.</p>
+                                    </div>
+
+                                    <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Update Profile Picture</label>
                                         <div className="flex items-center gap-4">
                                             <label className="flex-1 cursor-pointer">
@@ -179,15 +203,13 @@ export default function AdminProfilePage() {
                                                     className="hidden"
                                                 />
                                             </label>
-                                            {file && (
-                                                <button
-                                                    onClick={handleUpload}
-                                                    disabled={uploading}
-                                                    className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md transition-all disabled:opacity-50 disabled:shadow-none"
-                                                >
-                                                    {uploading ? 'Uploading...' : 'Save'}
-                                                </button>
-                                            )}
+                                            <button
+                                                onClick={handleSave}
+                                                disabled={uploading || (!file && (!username || username === user?.username))}
+                                                className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md transition-all disabled:opacity-50 disabled:shadow-none whitespace-nowrap"
+                                            >
+                                                {uploading ? 'Saving...' : 'Save Changes'}
+                                            </button>
                                         </div>
                                         {file && <p className="text-xs text-gray-500 mt-2">Selected: {file.name}</p>}
                                     </div>

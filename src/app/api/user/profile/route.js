@@ -16,12 +16,24 @@ export async function PUT(request) {
         }
 
         const data = await request.json();
-        const { profilePicture } = data;
+        const { profilePicture, username } = data;
 
         await connectDB();
 
         // Update fields
         if (profilePicture !== undefined) user.profilePicture = profilePicture;
+
+        // Update username if provided
+        if (username !== undefined && username.trim() !== '') {
+            // Check if username is already taken by another user
+            if (username !== user.username) {
+                const existingUser = await User.findOne({ username: username });
+                if (existingUser) {
+                    return NextResponse.json({ error: 'Username is already taken' }, { status: 400 });
+                }
+                user.username = username.trim();
+            }
+        }
 
         await user.save();
 
@@ -37,8 +49,20 @@ export async function PUT(request) {
 
     } catch (err) {
         console.error('Profile update error:', err);
+
+        // Handle Mongoose Validation Errors
+        if (err.name === 'ValidationError') {
+            const messages = Object.values(err.errors).map(val => val.message);
+            return NextResponse.json({ error: messages[0] }, { status: 400 });
+        }
+
+        // Handle Duplicate Key Error (e.g. Username)
+        if (err.code === 11000) {
+            return NextResponse.json({ error: 'Username is already taken' }, { status: 400 });
+        }
+
         return NextResponse.json(
-            { error: 'Failed to update profile' },
+            { error: err.message || 'Failed to update profile' },
             { status: 500 }
         );
     }

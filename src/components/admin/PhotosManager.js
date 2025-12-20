@@ -18,6 +18,7 @@ export default function PhotosManager() {
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [editingId, setEditingId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const toast = useToast();
 
@@ -56,8 +57,8 @@ export default function PhotosManager() {
             // Batch mode
             if (e.target.files && e.target.files.length > 0) {
                 const selected = Array.from(e.target.files);
-                if (selected.length > 8) {
-                    toast.error('Maximum 8 photos allowed at once');
+                if (selected.length > 20) {
+                    toast.error('Maximum 20 photos allowed at once');
                     return;
                 }
                 setFiles(selected);
@@ -265,7 +266,7 @@ export default function PhotosManager() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {photos.map(photo => (
+                            {photos.slice((currentPage - 1) * 8, currentPage * 8).map(photo => (
                                 <tr key={photo._id} className="hover:bg-gray-50/50">
                                     <td className="py-4 pl-2">
                                         <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
@@ -304,6 +305,34 @@ export default function PhotosManager() {
                             )}
                         </tbody>
                     </table>
+
+                    {/* Pagination Controls */}
+                    {Math.ceil(photos.length / 8) > 1 && (
+                        <div className="flex justify-between items-center mt-4 px-2 border-t border-gray-100 pt-4">
+                            <div className="text-sm text-gray-500">
+                                Showing <span className="font-medium">{((currentPage - 1) * 8) + 1}</span> to <span className="font-medium">{Math.min(currentPage * 8, photos.length)}</span> of <span className="font-medium">{photos.length}</span> photos
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${currentPage === 1 ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    Previous
+                                </button>
+                                <div className="text-sm text-gray-600 px-2 min-w-[60px] text-center">
+                                    {currentPage} / {Math.ceil(photos.length / 8)}
+                                </div>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(photos.length / 8)))}
+                                    disabled={currentPage === Math.ceil(photos.length / 8)}
+                                    className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${currentPage === Math.ceil(photos.length / 8) ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
