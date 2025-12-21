@@ -33,38 +33,39 @@ export async function generateMetadata({ params }) {
             imageUrl = 'https://placehold.co/1200x630/111827/FFD700/png?text=EthioxHub&font=roboto';
         }
 
-        // VIP Logic (Cloudinary Blur or S3 Fallback)
+        let metaTitle = title;
+        let metaDesc = description;
+
+        // VIP Logic
         if (photo.isPaid) {
+            const price = (photo.price / 100).toFixed(2);
+            metaTitle = `🔒 VIP: ${title} - ${price} ETB`;
+            metaDesc = `This is premium content. Unlock to view the full photo. Price: ${price} ETB.`;
+
             if (imageUrl && imageUrl.includes('cloudinary.com')) {
-                const price = (photo.price / 100).toFixed(2);
-                const text = `🔒 Premium Content - ${price} ETB`;
-                const encodedText = encodeURIComponent(text).replace(/%20/g, '%20');
-                const branding = encodeURIComponent('EthioxHub');
-
-                const transformation = `e_blur:2000` +
-                    `/co_rgb:FFD700,l_text:Arial_60_bold:${encodedText},e_outline:outer:4:000000/fl_layer_apply,g_center` +
-                    `/co_white,l_text:Arial_30_bold:${branding},e_shadow:50,o_80/fl_layer_apply,g_south,y_20`;
-
+                // Use simpler, more robust transformation for Telegram compatibility
+                // e_pixelate:15 adds a "censored" look, e_blur:1000 ensures it's unreadable
+                const transformation = 'e_pixelate:15,e_blur:1000';
                 imageUrl = imageUrl.replace('/upload/', `/upload/${transformation}/`);
             } else {
                 // S3 Fallback
-                imageUrl = 'https://placehold.co/1200x630/111827/FFD700/png?text=🔒+Premium+Content+Locked&font=roboto';
+                imageUrl = 'https://placehold.co/1200x630/111827/FFD700/png?text=Premium+Content+Locked&font=roboto';
             }
         }
 
         return {
-            title: `${title} - EthioxHub`,
-            description,
+            title: `${metaTitle} - EthioxHub`,
+            description: metaDesc,
             openGraph: {
-                title: title,
-                description,
+                title: metaTitle,
+                description: metaDesc,
                 images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
                 type: 'website',
             },
             twitter: {
                 card: 'summary_large_image',
-                title: title,
-                description,
+                title: metaTitle,
+                description: metaDesc,
                 images: [imageUrl],
             },
         };
