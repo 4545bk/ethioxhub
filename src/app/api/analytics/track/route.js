@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import connectDB from '../../../../lib/db';
-import AnalyticsEvent from '../../../../models/AnalyticsEvent';
+import connectDB from '@/lib/db';
+import AnalyticsEvent from '@/models/AnalyticsEvent';
 
 export async function POST(request) {
     try {

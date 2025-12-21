@@ -1,0 +1,9 @@
+{
+    "buildCommand": "npm install && npm run build",
+    "crons": [
+        {
+            "path": "/api/cron/publish-scheduled",
+            "schedule": "*/5 * * * *"
+        }
+    ]
+}

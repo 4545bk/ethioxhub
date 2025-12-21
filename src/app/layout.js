@@ -1,13 +1,13 @@
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { Suspense } from 'react';
-import { AuthProvider } from '../contexts/AuthContext';
-import { LanguageProvider } from '../contexts/LanguageContext';
-import { ToastProvider } from '../contexts/ToastContext';
-import { NotificationProvider } from '../contexts/NotificationContext';
-import Footer from '../components/Footer';
-import ReferralTracker from '../components/ReferralTracker';
-import AnalyticsTracker from '../components/AnalyticsTracker';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
+import { ToastProvider } from '@/contexts/ToastContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
+import Footer from '@/components/Footer';
+import ReferralTracker from '@/components/ReferralTracker';
+import AnalyticsTracker from '@/components/AnalyticsTracker';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });

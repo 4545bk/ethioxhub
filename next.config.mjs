@@ -7,7 +7,20 @@ const __dirname = path.dirname(__filename);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['res.cloudinary.com', 'lh3.googleusercontent.com'],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'res.cloudinary.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'lh3.googleusercontent.com',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.s3.*.amazonaws.com',
+            },
+        ],
     },
     // Disable static optimization for routes that need dynamic data
     output: 'standalone',

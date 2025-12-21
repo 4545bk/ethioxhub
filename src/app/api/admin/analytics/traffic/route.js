@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '../../../../../lib/middleware';
-import connectDB from '../../../../../lib/db';
-import AnalyticsEvent from '../../../../../models/AnalyticsEvent';
+import { requireAdmin } from '@/lib/middleware';
+import connectDB from '@/lib/db';
+import AnalyticsEvent from '@/models/AnalyticsEvent';
 
 export async function GET(request) {
     try {

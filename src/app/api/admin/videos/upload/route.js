@@ -111,7 +111,8 @@ export async function POST(request) {
             isPaid: validation.data.isPaid,
             price: validation.data.isPaid ? validation.data.price * 100 : 0, // Convert to cents
             duration: validation.data.duration || 0,
-            status: 'approved', // Admin uploads are auto-approved
+            scheduledPublishAt: validation.data.scheduledPublishAt ? new Date(validation.data.scheduledPublishAt) : null,
+            status: validation.data.scheduledPublishAt ? 'scheduled' : 'approved', // Scheduled or auto-approved
         };
 
         // Ensure accurate videoUrl
