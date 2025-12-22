@@ -30,6 +30,7 @@ export async function POST(request) {
             process.env.POLAR_PRICE_ID_50,
             process.env.POLAR_PRICE_ID_100,
             process.env.POLAR_PRICE_ID_200,
+            process.env.POLAR_PRICE_ID_CUSTOM,
         ].filter(Boolean);
 
         if (!allowedPrices.includes(priceId)) {
