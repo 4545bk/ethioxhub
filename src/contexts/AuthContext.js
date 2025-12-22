@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         // Check for existing session on mount
         checkAuth();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const checkAuth = async () => {

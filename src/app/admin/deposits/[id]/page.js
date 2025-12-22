@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import Navbar from '../../../components/Navbar';
+import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 
-import { useToast } from '../../../contexts/ToastContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function DepositDetailPage({ params }) {
     const { user } = useAuth();

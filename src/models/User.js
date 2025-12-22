@@ -114,6 +114,11 @@ const UserSchema = new mongoose.Schema(
             type: Number,
             default: 0, // in cents
         },
+        // Polar.sh Integration (optional)
+        polarCustomerId: {
+            type: String,
+            sparse: true,
+        },
         // Notifications
         notifications: [{
             type: {

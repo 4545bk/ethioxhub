@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import { motion } from 'framer-motion';
 import { useToast } from '@/contexts/ToastContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import PolarDeposit from '@/components/PolarDeposit';
 
 export default function DepositPage() {
     const { user, loading } = useAuth();
@@ -156,6 +157,23 @@ export default function DepositPage() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                        {/* Top Row: Polar Deposit (Full Width) */}
+                        <div className="lg:col-span-3">
+                            <PolarDeposit />
+                        </div>
+
+                        {/* Divider */}
+                        <div className="lg:col-span-3">
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-dark-700"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-4 bg-dark-950 text-dark-500 uppercase font-semibold">Or Deposit via Bank Transfer</span>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Left Column: Form */}
                         <div className="lg:col-span-2 order-2 lg:order-1">
                             <motion.div
