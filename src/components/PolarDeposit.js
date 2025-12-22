@@ -13,6 +13,7 @@ import { useToast } from '@/contexts/ToastContext';
 export default function PolarDeposit() {
     const [loading, setLoading] = useState(false);
     const [selectedAmount, setSelectedAmount] = useState(100); // Default to $100
+    const [customAmountValue, setCustomAmountValue] = useState('');
     const toast = useToast();
 
     const depositOptions = [
@@ -52,6 +53,17 @@ export default function PolarDeposit() {
             return;
         }
 
+        const payload = { priceId };
+
+        if (selectedOption.isCustom) {
+            const amount = parseFloat(customAmountValue);
+            if (isNaN(amount) || amount < 3) {
+                toast.error('Minimum deposit is $3.00 USD');
+                return;
+            }
+            payload.amount = Math.round(amount * 100); // Convert to cents
+        }
+
         setLoading(true);
         try {
             const token = localStorage.getItem('accessToken');
@@ -61,7 +73,7 @@ export default function PolarDeposit() {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ priceId }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -139,6 +151,30 @@ export default function PolarDeposit() {
                     </button>
                 ))}
             </div>
+
+            {/* Custom Amount Input */}
+            {selectedAmount === 'custom' && (
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Enter Amount (USD)
+                    </label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                        <input
+                            type="number"
+                            min="3"
+                            step="0.01"
+                            value={customAmountValue}
+                            onChange={(e) => setCustomAmountValue(e.target.value)}
+                            placeholder="50.00"
+                            className="w-full bg-dark-800 border border-gray-700 rounded-lg py-3 pl-8 pr-4 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                        />
+                    </div>
+                    <p className="mt-1 text-xs text-blue-300">
+                        Min: $3.00 • ≈ {customAmountValue ? (parseFloat(customAmountValue) * 60).toLocaleString() : '0'} ETB
+                    </p>
+                </div>
+            )}
 
             {/* Proceed Button */}
             <button

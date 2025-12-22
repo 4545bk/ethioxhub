@@ -19,7 +19,7 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { priceId } = body;
+        const { priceId, amount } = body;
 
         if (!priceId) {
             return NextResponse.json({ error: 'Price ID is required' }, { status: 400 });
@@ -42,6 +42,26 @@ export async function POST(request) {
             ? 'https://sandbox-api.polar.sh'
             : 'https://api.polar.sh';
 
+        // Construct payload
+        const polarPayload = {
+            payment_processor: 'stripe',
+            product_price_id: priceId,
+            customer_email: user.email,
+            customer_name: user.username,
+            customer_billing_address: {
+                country: 'US',
+            },
+            metadata: {
+                ethioxhub_user_id: user._id.toString(),
+            },
+            success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/polar/success?session_id={CHECKOUT_ID}`,
+        };
+
+        // Add amount if it's the custom price ID
+        if (amount && priceId === process.env.POLAR_PRICE_ID_CUSTOM) {
+            polarPayload.amount = amount;
+        }
+
         // Create Polar checkout session
         const checkoutResponse = await fetch(`${apiEndpoint}/v1/checkouts/`, {
             method: 'POST',
@@ -49,19 +69,7 @@ export async function POST(request) {
                 'Authorization': `Bearer ${process.env.POLAR_ACCESS_TOKEN}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                payment_processor: 'stripe',
-                product_price_id: priceId,
-                customer_email: user.email,
-                customer_name: user.username,
-                customer_billing_address: {
-                    country: 'US',
-                },
-                metadata: {
-                    ethioxhub_user_id: user._id.toString(),
-                },
-                success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/polar/success?session_id={CHECKOUT_ID}`,
-            }),
+            body: JSON.stringify(polarPayload),
         });
 
         if (!checkoutResponse.ok) {
