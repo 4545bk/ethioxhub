@@ -34,6 +34,13 @@ export default function PolarDeposit() {
             label: '$200 USD',
             popular: false,
         },
+        {
+            amount: 'custom',
+            priceId: process.env.NEXT_PUBLIC_POLAR_PRICE_ID_CUSTOM,
+            label: 'Custom',
+            popular: false,
+            isCustom: true,
+        },
     ];
 
     const handlePolarCheckout = async () => {
@@ -120,7 +127,12 @@ export default function PolarDeposit() {
                         )}
 
                         <div className="text-2xl font-bold text-white mb-1">{option.label}</div>
-                        <div className="text-sm text-blue-200">≈ {(option.amount * 60).toLocaleString()} ETB</div>
+                        <div className="text-sm text-blue-200">
+                            {option.isCustom
+                                ? 'Min $3.00 USD'
+                                : `≈ ${(option.amount * 60).toLocaleString()} ETB`
+                            }
+                        </div>
                         {!option.priceId && (
                             <div className="mt-2 text-xs text-yellow-400">Coming Soon</div>
                         )}
@@ -141,7 +153,12 @@ export default function PolarDeposit() {
                     </>
                 ) : (
                     <>
-                        <span>Deposit ${selectedAmount.toFixed(2)} USD</span>
+                        <span>
+                            {selectedAmount === 'custom'
+                                ? 'Continue to Custom Deposit'
+                                : `Deposit $${selectedAmount.toFixed(2)} USD`
+                            }
+                        </span>
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
