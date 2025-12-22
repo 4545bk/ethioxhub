@@ -19,47 +19,80 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { priceId } = body;
+        const { priceId, customAmount } = body; // customAmount in cents (e.g., 5000 = $50)
 
-        if (!priceId) {
-            return NextResponse.json({ error: 'Price ID is required' }, { status: 400 });
+        // Either priceId or customAmount must be provided
+        if (!priceId && !customAmount) {
+            return NextResponse.json({ error: 'Price ID or custom amount is required' }, { status: 400 });
         }
 
-        // Validate price ID against allowed options
-        const allowedPrices = [
-            process.env.POLAR_PRICE_ID_50,
-            process.env.POLAR_PRICE_ID_100,
-            process.env.POLAR_PRICE_ID_200,
-        ].filter(Boolean);
+        // For preset amounts, validate the price ID
+        if (priceId) {
+            const allowedPrices = [
+                process.env.POLAR_PRICE_ID_50,
+                process.env.POLAR_PRICE_ID_100,
+                process.env.POLAR_PRICE_ID_200,
+            ].filter(Boolean);
 
-        if (!allowedPrices.includes(priceId)) {
-            return NextResponse.json({ error: 'Invalid price option' }, { status: 400 });
+            if (!allowedPrices.includes(priceId)) {
+                return NextResponse.json({ error: 'Invalid price option' }, { status: 400 });
+            }
         }
 
-        // Create Polar checkout session (use sandbox for testing)
+        // For custom amounts, validate minimum
+        if (customAmount && customAmount < 100) { // Minimum $1.00
+            return NextResponse.json({ error: 'Minimum deposit is $1.00' }, { status: 400 });
+        }
+
+        // Determine API endpoint (sandbox or production)
         const apiEndpoint = process.env.POLAR_ACCESS_TOKEN?.includes('sandbox') || process.env.POLAR_ACCESS_TOKEN?.startsWith('polar_oat_2')
             ? 'https://sandbox-api.polar.sh'
             : 'https://api.polar.sh';
 
+        let checkoutPayload;
+
+        if (customAmount) {
+            // For custom amounts, create a dynamic product on-the-fly using custom_field_data
+            checkoutPayload = {
+                payment_processor: 'stripe',
+                amount: customAmount, // Amount in cents
+                currency: 'USD',
+                customer_email: user.email,
+                customer_name: user.username,
+                customer_billing_address: {
+                    country: 'US',
+                },
+                metadata: {
+                    ethioxhub_user_id: user._id.toString(),
+                    custom_deposit: 'true',
+                },
+                success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/polar/success?session_id={CHECKOUT_ID}`,
+            };
+        } else {
+            // For preset amounts, use the existing price ID
+            checkoutPayload = {
+                payment_processor: 'stripe',
+                product_price_id: priceId,
+                customer_email: user.email,
+                customer_name: user.username,
+                customer_billing_address: {
+                    country: 'US',
+                },
+                metadata: {
+                    ethioxhub_user_id: user._id.toString(),
+                },
+                success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/polar/success?session_id={CHECKOUT_ID}`,
+            };
+        }
+
+        // Create Polar checkout session
         const checkoutResponse = await fetch(`${apiEndpoint}/v1/checkouts/`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${process.env.POLAR_ACCESS_TOKEN}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                payment_processor: 'stripe',
-                product_price_id: priceId,
-                customer_email: user.email,
-                customer_name: user.username,
-                customer_billing_address: {
-                    country: 'US', // Default for international
-                },
-                metadata: {
-                    ethioxhub_user_id: user._id.toString(),
-                },
-                success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/polar/success?session_id={CHECKOUT_ID}`,
-            }),
+            body: JSON.stringify(checkoutPayload),
         });
 
         if (!checkoutResponse.ok) {
