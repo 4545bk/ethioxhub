@@ -955,7 +955,7 @@ export default function AdminDashboard() {
                         >
                             <h3 className="text-xl font-bold mb-4 text-gray-900">⚠️ Delete Video</h3>
                             <p className="text-gray-600 text-sm mb-4">
-                                Are you sure you want to delete <strong>"{selectedVideoTitle}"</strong>?
+                                Are you sure you want to delete <strong>&quot;{selectedVideoTitle}&quot;</strong>?
                             </p>
                             <p className="text-red-600 text-xs mb-6">
                                 This action cannot be undone. The video will be permanently deleted from the database and storage.
@@ -990,7 +990,7 @@ export default function AdminDashboard() {
                         >
                             <h3 className="text-xl font-bold mb-4 text-gray-900">✏️ Edit Video</h3>
                             <p className="text-gray-600 text-sm mb-6">
-                                Editing: <strong>"{editingVideo.title}"</strong>
+                                Editing: <strong>&quot;{editingVideo.title}&quot;</strong>
                             </p>
 
                             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">

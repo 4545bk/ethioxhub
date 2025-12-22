@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
@@ -12,16 +12,7 @@ export default function MyDepositsPage() {
     const [deposits, setDeposits] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (authLoading) return; // Wait for auth check  
-        if (!user) {
-            router.push('/login');
-            return;
-        }
-        fetchDeposits();
-    }, [user, authLoading]);
-
-    const fetchDeposits = async () => {
+    const fetchDeposits = useCallback(async () => {
         try {
             const token = localStorage.getItem('accessToken');
             const response = await fetch('/api/deposits/my-deposits', {
@@ -38,7 +29,16 @@ export default function MyDepositsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        if (authLoading) return; // Wait for auth check  
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+        fetchDeposits();
+    }, [user, authLoading, router, fetchDeposits]);
 
     if (authLoading) {
         return (
@@ -82,7 +82,7 @@ export default function MyDepositsPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <h3 className="text-xl font-semibold text-white mb-2">No Deposits Yet</h3>
-                            <p className="text-dark-400 mb-4">You haven't made any deposit requests</p>
+                            <p className="text-dark-400 mb-4">You haven&apos;t made any deposit requests</p>
                             <button onClick={() => router.push('/deposit')} className="btn btn-primary">
                                 Make a Deposit
                             </button>

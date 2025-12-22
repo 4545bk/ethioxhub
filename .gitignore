@@ -83,3 +83,5 @@ pids
 # Temp files
 tmp/
 temp/
+
+.vercel

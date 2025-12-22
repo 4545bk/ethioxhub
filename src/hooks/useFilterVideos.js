@@ -1,11 +1,11 @@
-/**
- * useFilterVideos Hook
- * Manages video filtering state and API calls
- */
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export function useFilterVideos(initialFilters = {}) {
+    // ... [state definitions remain unchanged] ...
+
+    // NOTE: For brevity in this diff, assume state lines 9-42 are unchanged. 
+    // I will include them in the full content below to ensure correctness.
+
     const [filters, setFilters] = useState({
         category: initialFilters.category || '',
         isPaid: initialFilters.isPaid || '',
@@ -41,7 +41,7 @@ export function useFilterVideos(initialFilters = {}) {
         fetchCategories();
     }, []);
 
-    const fetchVideos = async () => {
+    const fetchVideos = useCallback(async () => {
         setLoading(true);
         setError(null);
 
@@ -70,11 +70,11 @@ export function useFilterVideos(initialFilters = {}) {
             setError(err.message);
             setLoading(false);
         }
-    };
+    }, [filters]);
 
     useEffect(() => {
         fetchVideos();
-    }, [filters]);
+    }, [fetchVideos]);
 
     const updateFilters = (key, value) => {
         setFilters(prev => ({

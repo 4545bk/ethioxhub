@@ -136,7 +136,7 @@ function HomePageContent() {
                     {filters.search && (
                         <div className="mb-6 flex items-center justify-between">
                             <h2 className="text-xl font-bold">
-                                Search results for "{filters.search}"
+                                Search results for &quot;{filters.search}&quot;
                             </h2>
                             <button
                                 onClick={() => {
