@@ -36,12 +36,31 @@ export async function GET(request) {
         ]);
         const totalViews = viewsAgg.length > 0 ? viewsAgg[0].totalViews : 0;
 
-        // 3. Total Revenue (Confirmed Deposits)
+        // 3. Total Revenue (Confirmed Deposits) - Breakdown by method
         const revenueAgg = await Transaction.aggregate([
             { $match: { type: 'deposit', status: 'approved' } },
             { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
         const totalRevenue = revenueAgg.length > 0 ? revenueAgg[0].total : 0;
+
+        // Revenue from International Card Payments (Polar)
+        const polarRevenueAgg = await Transaction.aggregate([
+            {
+                $match: {
+                    type: 'deposit',
+                    status: 'approved',
+                    $or: [
+                        { 'metadata.source': 'polar' },
+                        { 'metadata.notes': { $regex: 'Polar|International card payment', $options: 'i' } }
+                    ]
+                }
+            },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const polarRevenue = polarRevenueAgg.length > 0 ? polarRevenueAgg[0].total : 0;
+
+        // Revenue from Bank Transfers (exclude Polar)
+        const bankRevenue = totalRevenue - polarRevenue;
 
         // 4. Counts
         const pendingDeposits = await Transaction.countDocuments({ type: 'deposit', status: 'pending' });
@@ -49,16 +68,18 @@ export async function GET(request) {
         const totalVideos = await Video.countDocuments({});
 
         // Debug logging for server console
-        console.log('Analytics fetched:', { totalUsers, activeUsers, totalVideos, totalRevenue, pendingVideos });
+        console.log('Analytics fetched:', { totalUsers, activeUsers, totalVideos, totalRevenue, polarRevenue, bankRevenue, pendingVideos });
 
         return NextResponse.json({
             success: true,
             analytics: {
                 totalUsers,
                 newUsers,
-                activeUsers, // Added
+                activeUsers,
                 totalViews,
                 totalRevenue,
+                polarRevenue, // International card payments
+                bankRevenue, // Bank transfers
                 pendingDeposits,
                 pendingVideos,
                 totalVideos

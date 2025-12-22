@@ -30,6 +30,7 @@ export default function MyDepositsPage() {
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('📊 Deposits received:', data.deposits);
                 setDeposits(data.deposits || []);
             }
         } catch (err) {
@@ -98,10 +99,68 @@ export default function MyDepositsPage() {
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
                                             <div className="space-y-2">
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-xl">💰</span>
-                                                    <span className="text-xl font-bold text-white">{(deposit.amount / 100).toFixed(2)} ETB</span>
-                                                </div>
+                                                {/* Log for debugging */}
+                                                {console.log('Deposit item:', {
+                                                    id: deposit._id,
+                                                    amount: deposit.amount,
+                                                    metadata: deposit.metadata,
+                                                    source: deposit.metadata?.source,
+                                                    originalAmount: deposit.metadata?.originalAmount
+                                                })}
+
+                                                {/* Detect if Polar payment - check source OR notes field */}
+                                                {(() => {
+                                                    const isPolar = deposit.metadata?.source === 'polar' ||
+                                                        deposit.metadata?.notes?.includes('Polar') ||
+                                                        deposit.metadata?.notes?.includes('International card payment');
+
+                                                    // Get or calculate USD amount
+                                                    const conversionRate = deposit.metadata?.conversionRate || 60;
+                                                    const usdAmount = deposit.metadata?.originalAmount || (deposit.amount / conversionRate);
+
+                                                    return (
+                                                        <>
+                                                            <div className="flex items-center space-x-2">
+                                                                {isPolar ? (
+                                                                    <>
+                                                                        <span className="text-xl">💳</span>
+                                                                        <span className="text-xl font-bold text-white">
+                                                                            {(deposit.amount / 100).toFixed(2)} ETB
+                                                                            <span className="text-base text-dark-400 ml-2">
+                                                                                (${(usdAmount / 100).toFixed(2)} Dollars)
+                                                                            </span>
+                                                                        </span>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="text-xl">💰</span>
+                                                                        <span className="text-xl font-bold text-white">
+                                                                            {(deposit.amount / 100).toFixed(2)} ETB
+                                                                        </span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Payment method badge */}
+                                                            <div className="flex items-center space-x-2">
+                                                                {isPolar ? (
+                                                                    <>
+                                                                        <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded-full border border-blue-500/20">
+                                                                            International Card Payment
+                                                                        </span>
+                                                                        <span className="text-xs text-dark-500">
+                                                                            (Rate: 1 USD = {conversionRate} ETB)
+                                                                        </span>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 text-xs rounded-full border border-purple-500/20">
+                                                                        Bank Transfer
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    );
+                                                })()}
 
                                                 <div className="flex items-center space-x-2">
                                                     <span className="text-dark-400">⏳ Status:</span>

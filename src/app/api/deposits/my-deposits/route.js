@@ -21,6 +21,11 @@ export async function GET(request) {
             .select('amount status cloudinaryUrl adminNote senderName metadata createdAt')
             .limit(50);
 
+        // Debug: Log first deposit to see structure
+        if (deposits.length > 0) {
+            console.log('📊 Sample deposit from DB:', JSON.stringify(deposits[0], null, 2));
+        }
+
         return NextResponse.json({
             success: true,
             deposits,

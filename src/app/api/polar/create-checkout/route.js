@@ -36,8 +36,12 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Invalid price option' }, { status: 400 });
         }
 
-        // Create Polar checkout session
-        const checkoutResponse = await fetch('https://api.polar.sh/v1/checkouts/', {
+        // Create Polar checkout session (use sandbox for testing)
+        const apiEndpoint = process.env.POLAR_ACCESS_TOKEN?.includes('sandbox') || process.env.POLAR_ACCESS_TOKEN?.startsWith('polar_oat_2')
+            ? 'https://sandbox-api.polar.sh'
+            : 'https://api.polar.sh';
+
+        const checkoutResponse = await fetch(`${apiEndpoint}/v1/checkouts/`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${process.env.POLAR_ACCESS_TOKEN}`,

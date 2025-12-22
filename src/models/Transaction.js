@@ -62,6 +62,13 @@ const TransactionSchema = new mongoose.Schema(
             photoTitle: String,
             // For platform fees
             feePercent: Number,
+            // Polar.sh payment metadata
+            source: String, // 'polar' for card payments
+            orderId: String, // Polar order ID
+            polarCustomerEmail: String,
+            originalCurrency: String, // 'USD' for Polar
+            originalAmount: Number, // Original USD amount in cents
+            conversionRate: Number, // Exchange rate used
             // Any other contextual data
             notes: String,
         },

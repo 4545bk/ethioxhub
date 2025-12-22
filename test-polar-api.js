@@ -1,10 +1,10 @@
 // Quick script to fetch your Polar products and price IDs
-const POLAR_ACCESS_TOKEN = 'polar_oat_S4jsPpk4rMDdBfgbzb1vs3Amd0W0jUtBXuElV1KlaKQ';
-const POLAR_ORG_ID = 'ethio-ordering-food';
+const POLAR_ACCESS_TOKEN = 'polar_oat_2Mj43EjZiirg6imGS2rTejJABclXympbFzh1n2ZbC15';
+const POLAR_ORG_ID = 'ethioxhub-test';
 
 async function fetchProducts() {
     try {
-        const response = await fetch(`https://api.polar.sh/v1/products`, {
+        const response = await fetch(`https://sandbox-api.polar.sh/v1/products`, {
             headers: {
                 'Authorization': `Bearer ${POLAR_ACCESS_TOKEN}`,
             }
