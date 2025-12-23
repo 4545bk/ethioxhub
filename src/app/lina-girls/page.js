@@ -21,6 +21,7 @@ export default function LinaGirlsPage() {
     const [confirmProfile, setConfirmProfile] = useState(null); // Profile object to confirm unlock
     const [insufficientFundsModal, setInsufficientFundsModal] = useState(null);
     const [activePhotos, setActivePhotos] = useState({}); // Track active photo for each profile { [id]: url }
+    const [showInstructions, setShowInstructions] = useState(false);
 
     useEffect(() => {
         fetchProfiles();
@@ -193,6 +194,61 @@ Check her out: ${shareUrl}
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" /></svg>
                             Talk to us on Telegram (@linumar)
                         </a>
+                    </div>
+
+                    {/* Instructions Toggle */}
+                    <div className="text-center mb-8">
+                        <button
+                            onClick={() => setShowInstructions(!showInstructions)}
+                            className="text-orange-500 hover:text-orange-400 font-bold underline flex items-center justify-center gap-2 mx-auto transition"
+                        >
+                            <span>{showInstructions ? 'Hide Instructions' : 'How to Use / የአጠቃቀም መመሪያ'}</span>
+                            <svg className={`w-4 h-4 transform transition ${showInstructions ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <AnimatePresence>
+                            {showInstructions && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="mt-4 bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-2xl mx-auto text-left shadow-2xl">
+                                        <div className="grid md:grid-cols-2 gap-8">
+                                            {/* English */}
+                                            <div>
+                                                <h3 className="text-white font-bold mb-3 border-b border-gray-700 pb-2 flex items-center gap-2">
+                                                    <span className="text-lg">🇬🇧</span> How to Use
+                                                </h3>
+                                                <ol className="list-decimal list-inside space-y-3 text-sm text-gray-300">
+                                                    <li><span className="text-orange-400 font-bold">Browse</span> the profiles below.</li>
+                                                    <li><span className="text-orange-400 font-bold">Register/Login</span> to your account.</li>
+                                                    <li><span className="text-orange-400 font-bold">Deposit</span> funds (1000 ETB fee).</li>
+                                                    <li>Click <span className="text-orange-400 font-bold">Unlock</span> on the profile.</li>
+                                                    <li>Instantly get <span className="text-orange-400 font-bold">Phone & Telegram</span>.</li>
+                                                </ol>
+                                            </div>
+                                            {/* Amharic */}
+                                            <div>
+                                                <h3 className="text-white font-bold mb-3 border-b border-gray-700 pb-2 flex items-center gap-2">
+                                                    <span className="text-lg">🇪🇹</span> እንዴት መጠቀም እንደሚቻል
+                                                </h3>
+                                                <ol className="list-decimal list-inside space-y-3 text-sm text-gray-300">
+                                                    <li>ከታች ያሉትን <span className="text-orange-400 font-bold">መገለጫዎች</span> ይመልከቱ።</li>
+                                                    <li>ወደ መለያዎ <span className="text-orange-400 font-bold">ይግቡ/ይመዝገቡ</span>።</li>
+                                                    <li>ሂሳብዎ ላይ <span className="text-orange-400 font-bold">ገንዘብ ያስገቡ</span> (1000 ብር)።</li>
+                                                    <li>መገለጫው ላይ <span className="text-orange-400 font-bold">Unlock</span> የሚለውን ይጫኑ።</li>
+                                                    <li>ወዲያውኑ <span className="text-orange-400 font-bold">ስልክ እና ቴሌግራም</span> ያግኙ።</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Error State */}
