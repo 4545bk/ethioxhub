@@ -369,9 +369,10 @@ export default function PhotosPage() {
                                 <h2 className="text-xl text-white font-bold mb-1">{selectedPhoto.title}</h2>
                                 {selectedPhoto.description && <p className="text-gray-400 mb-2">{selectedPhoto.description}</p>}
 
-                                {selectedPhoto.relatedVideo && (
+
+                                {(selectedPhoto.customLink || selectedPhoto.relatedVideo) && (
                                     <Link
-                                        href={`/videos/${selectedPhoto.relatedVideo._id || selectedPhoto.relatedVideo}`}
+                                        href={selectedPhoto.customLink || `/videos/${selectedPhoto.relatedVideo._id || selectedPhoto.relatedVideo}`}
                                         className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold transition shadow-lg mt-2"
                                         onClick={(e) => e.stopPropagation()}
                                     >

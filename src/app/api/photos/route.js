@@ -63,7 +63,7 @@ export async function POST(request) {
         await connectDB();
         const body = await request.json();
 
-        const { title, description, url, isPaid, price, album, relatedVideo } = body;
+        const { title, description, url, isPaid, price, album, relatedVideo, customLink } = body;
 
         if (!title || !url) {
             return NextResponse.json({ error: 'Title and URL are required' }, { status: 400 });
@@ -78,7 +78,8 @@ export async function POST(request) {
             isPaid: !!isPaid,
             price: price ? parseInt(price) : 0,
             status: 'active',
-            relatedVideo: relatedVideo || undefined
+            relatedVideo: relatedVideo || undefined,
+            customLink: customLink || undefined
         });
 
         // Add 'likes' as empty array for response consistency if needed

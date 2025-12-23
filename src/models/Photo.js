@@ -45,6 +45,10 @@ const PhotoSchema = new mongoose.Schema({
     relatedVideo: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Video'
+    },
+    customLink: {
+        type: String,
+        trim: true // For manual external links or specific internal paths
     }
 }, { timestamps: true });
 

@@ -68,13 +68,15 @@ export default function PhotosManager() {
         description: '',
         isPaid: false,
         price: 0,
-        relatedVideo: ''
+        relatedVideo: '',
+        customLink: ''
     });
     const [files, setFiles] = useState([]); // Array of { id, file, preview }
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [videoSearch, setVideoSearch] = useState('');
 
     const toast = useToast();
 
@@ -327,7 +329,8 @@ export default function PhotosManager() {
             isPaid: photo.isPaid,
             price: photo.price / 100, // Cents to Unit
             url: photo.url,
-            relatedVideo: photo.relatedVideo || ''
+            relatedVideo: photo.relatedVideo || '',
+            customLink: photo.customLink || ''
         });
         setPreview(photo.url);
         setFile(null);
@@ -336,11 +339,12 @@ export default function PhotosManager() {
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setForm({ title: '', description: '', isPaid: false, price: 0 });
+        setForm({ title: '', description: '', isPaid: false, price: 0, relatedVideo: '', customLink: '' });
         setFile(null);
         setFiles([]);
         setPreview(null);
         setEditingId(null);
+        setVideoSearch('');
     };
 
     return (
@@ -504,19 +508,48 @@ export default function PhotosManager() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Related Video (Optional)</label>
+
+                                    {/* Search Box */}
+                                    <input
+                                        type="text"
+                                        placeholder="Search videos..."
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={videoSearch}
+                                        onChange={e => setVideoSearch(e.target.value)}
+                                    />
+
+                                    {/* Video Dropdown */}
                                     <select
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
                                         value={form.relatedVideo}
                                         onChange={e => setForm({ ...form, relatedVideo: e.target.value })}
                                     >
                                         <option value="">-- No Related Video --</option>
-                                        {availableVideos.map(video => (
-                                            <option key={video._id} value={video._id}>
-                                                {video.title}
-                                            </option>
-                                        ))}
+                                        {availableVideos
+                                            .filter(video =>
+                                                !videoSearch ||
+                                                video.title.toLowerCase().includes(videoSearch.toLowerCase())
+                                            )
+                                            .map(video => (
+                                                <option key={video._id} value={video._id}>
+                                                    {video.title}
+                                                </option>
+                                            ))
+                                        }
                                     </select>
-                                    <p className="text-xs text-gray-400 mt-1">Users can click a button to watch this video.</p>
+                                    <p className="text-xs text-gray-400 mt-1">Select a video from your library</p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Custom Link (Optional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g., https://youtube.com/watch?v=... or /videos/123"
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={form.customLink}
+                                        onChange={e => setForm({ ...form, customLink: e.target.value })}
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">Manual URL for external or specific links (overrides video selection)</p>
                                 </div>
 
                                 <div>
