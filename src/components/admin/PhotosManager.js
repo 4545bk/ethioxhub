@@ -1,8 +1,61 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { nanoid } from 'nanoid';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    MouseSensor,
+    TouchSensor
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+    useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable Item Component
+function SortablePhotoItem({ id, url }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : 'auto',
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative cursor-move touch-none hover:shadow-lg transition-shadow"
+        >
+            <img
+                src={url}
+                alt="Preview"
+                className="w-full h-full object-cover pointer-events-none"
+            />
+        </div>
+    );
+}
 
 export default function PhotosManager() {
     const [photos, setPhotos] = useState([]);
@@ -15,7 +68,7 @@ export default function PhotosManager() {
         isPaid: false,
         price: 0
     });
-    const [files, setFiles] = useState([]); // For batch upload
+    const [files, setFiles] = useState([]); // Array of { id, file, preview }
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [editingId, setEditingId] = useState(null);
@@ -23,17 +76,30 @@ export default function PhotosManager() {
 
     const toast = useToast();
 
+    // Dnd Sensors
+    const sensors = useSensors(
+        useSensor(MouseSensor, {
+            activationConstraint: {
+                distance: 10,
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
     useEffect(() => {
         fetchPhotos();
     }, []);
 
     const fetchPhotos = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            // Reuse public API but maybe add admin param if needed? 
-            // Actually public API returns all actives.
-            // Admin probably wants status hidden too? 
-            // For now, public API is fine.
             const res = await fetch('/api/photos?limit=100');
             if (res.ok) {
                 const data = await res.json();
@@ -62,15 +128,30 @@ export default function PhotosManager() {
                     toast.error('Maximum 20 photos allowed at once');
                     return;
                 }
+
+                // Wrap files with unique ID for dnd-kit
                 const filesWithId = selected.map(file => ({
                     id: nanoid(),
                     file,
                     preview: URL.createObjectURL(file)
                 }));
+
                 setFiles(filesWithId);
-                setFile(null); // Clear single file
-                setPreview(null); // Clear single preview
+                setFile(null);
+                setPreview(null);
             }
+        }
+    };
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+
+        if (active.id !== over?.id) {
+            setFiles((items) => {
+                const oldIndex = items.findIndex((item) => item.id === active.id);
+                const newIndex = items.findIndex((item) => item.id === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
         }
     };
 
@@ -138,9 +219,9 @@ export default function PhotosManager() {
                 // --- ALBUM UPLOAD ---
                 const albumUrls = [];
 
-                // Upload all files
+                // Upload all files in correct sorted order
                 for (let i = 0; i < files.length; i++) {
-                    const currentFile = files[i].file;
+                    const currentFile = files[i].file; // Access .file property specifically
 
                     // 1. Sign
                     const signRes = await fetch('/api/upload/sign?resource_type=image', {
@@ -183,7 +264,7 @@ export default function PhotosManager() {
                         ...form,
                         title: form.title,
                         url: albumUrls[0], // First image is cover
-                        album: albumUrls,  // All images in album
+                        album: albumUrls,  // All images in album order
                         price: parseFloat(form.price) * 100
                     })
                 });
@@ -241,7 +322,7 @@ export default function PhotosManager() {
         setIsModalOpen(false);
         setForm({ title: '', description: '', isPaid: false, price: 0 });
         setFile(null);
-        setFiles([]); // Clear
+        setFiles([]);
         setPreview(null);
         setEditingId(null);
     };
@@ -350,9 +431,9 @@ export default function PhotosManager() {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden"
+                            className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
                         >
-                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
                                 <h3 className="font-bold text-gray-900">{editingId ? 'Edit Photo' : 'Add New Photo'}</h3>
                                 <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">✕</button>
                             </div>
@@ -405,43 +486,53 @@ export default function PhotosManager() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Image(s)</label>
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        multiple={!editingId} // Allow multiple if adding new
+                                        multiple={!editingId}
                                         onChange={handleFileChange}
-                                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                                     />
+
                                     {/* Preview for Single (Edit) */}
-                                    {preview && (
+                                    {preview && editingId && (
                                         <div className="mt-4 w-full h-40 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                                             <img src={preview} alt="Preview" className="w-full h-full object-contain" />
                                         </div>
                                     )}
-                                    {/* Preview for Grid (Batch) */}
+
+                                    {/* Preview for Grid (Batch - Sortable) */}
                                     {!editingId && files.length > 0 && (
-                                        <Reorder.Group
-                                            axis="y"
-                                            values={files}
-                                            onReorder={setFiles}
-                                            className="mt-4 grid grid-cols-4 gap-2"
-                                        >
-                                            {files.map((item) => (
-                                                <Reorder.Item
-                                                    key={item.id}
-                                                    value={item}
-                                                    className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative cursor-move"
-                                                    whileDrag={{ scale: 1.1 }}
+                                        <div className="mt-4">
+                                            <DndContext
+                                                sensors={sensors}
+                                                collisionDetection={closestCenter}
+                                                onDragEnd={handleDragEnd}
+                                            >
+                                                <SortableContext
+                                                    items={files}
+                                                    strategy={rectSortingStrategy}
                                                 >
-                                                    <img src={item.preview} alt="Preview" className="w-full h-full object-cover pointer-events-none" />
-                                                </Reorder.Item>
-                                            ))}
-                                        </Reorder.Group>
+                                                    <div className="grid grid-cols-4 gap-2">
+                                                        {files.map((file) => (
+                                                            <SortablePhotoItem
+                                                                key={file.id}
+                                                                id={file.id}
+                                                                url={file.preview}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </SortableContext>
+                                            </DndContext>
+                                            <p className="text-xs text-center text-gray-400 mt-2">
+                                                Drag images to reorder
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
 
-                                <div className="pt-4 flex justify-end gap-3">
+                                <div className="pt-4 flex justify-end gap-3 sticky bottom-0 bg-white pb-2">
                                     <button
                                         type="button"
                                         onClick={closeModal}
@@ -456,7 +547,7 @@ export default function PhotosManager() {
                                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
                                     >
                                         {uploading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                                        {editingId ? 'Update Photo' : 'Upload Photo'}
+                                        {editingId ? 'Update Photo' : 'Upload Photos'}
                                     </button>
                                 </div>
                             </form>
