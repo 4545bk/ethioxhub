@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { nanoid } from 'nanoid';
 
 export default function PhotosManager() {
     const [photos, setPhotos] = useState([]);
@@ -61,7 +62,12 @@ export default function PhotosManager() {
                     toast.error('Maximum 20 photos allowed at once');
                     return;
                 }
-                setFiles(selected);
+                const filesWithId = selected.map(file => ({
+                    id: nanoid(),
+                    file,
+                    preview: URL.createObjectURL(file)
+                }));
+                setFiles(filesWithId);
                 setFile(null); // Clear single file
                 setPreview(null); // Clear single preview
             }
@@ -134,7 +140,7 @@ export default function PhotosManager() {
 
                 // Upload all files
                 for (let i = 0; i < files.length; i++) {
-                    const currentFile = files[i];
+                    const currentFile = files[i].file;
 
                     // 1. Sign
                     const signRes = await fetch('/api/upload/sign?resource_type=image', {
@@ -415,13 +421,23 @@ export default function PhotosManager() {
                                     )}
                                     {/* Preview for Grid (Batch) */}
                                     {!editingId && files.length > 0 && (
-                                        <div className="mt-4 grid grid-cols-4 gap-2">
-                                            {files.map((f, i) => (
-                                                <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative">
-                                                    <img src={URL.createObjectURL(f)} alt={`Preview ${i}`} className="w-full h-full object-cover" />
-                                                </div>
+                                        <Reorder.Group
+                                            axis="y"
+                                            values={files}
+                                            onReorder={setFiles}
+                                            className="mt-4 grid grid-cols-4 gap-2"
+                                        >
+                                            {files.map((item) => (
+                                                <Reorder.Item
+                                                    key={item.id}
+                                                    value={item}
+                                                    className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative cursor-move"
+                                                    whileDrag={{ scale: 1.1 }}
+                                                >
+                                                    <img src={item.preview} alt="Preview" className="w-full h-full object-cover pointer-events-none" />
+                                                </Reorder.Item>
                                             ))}
-                                        </div>
+                                        </Reorder.Group>
                                     )}
                                 </div>
 
