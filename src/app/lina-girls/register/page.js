@@ -58,7 +58,8 @@ export default function LinaRegisterPage() {
         agreeToSalary: false,
         localSalary: false,
         intlSalary: false,
-        contactInfo: ''
+        contactInfo: '',
+        telegramUsername: ''
     });
 
     const [mainPhoto, setMainPhoto] = useState(null);
@@ -416,6 +417,29 @@ export default function LinaRegisterPage() {
                                 required
                                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
                             />
+                        </div>
+
+                        {/* Telegram Username */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-300 mb-2">
+                                Telegram Username (Optional) (የቴሌግራም ስም - አማራጭ)
+                            </label>
+                            <input
+                                type="text"
+                                name="telegramUsername"
+                                value={formData.telegramUsername}
+                                onChange={(e) => {
+                                    let value = e.target.value.trim();
+                                    // Auto-add @ if not present and value is not empty
+                                    if (value && !value.startsWith('@')) {
+                                        value = '@' + value;
+                                    }
+                                    setFormData(prev => ({ ...prev, telegramUsername: value }));
+                                }}
+                                placeholder="e.g., @username (ለምሳሌ @username)"
+                                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Optional - Telegram will be shown to users after they unlock your profile</p>
                         </div>
 
                         {/* Submit Button */}

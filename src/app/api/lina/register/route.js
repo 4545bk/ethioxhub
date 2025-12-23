@@ -17,6 +17,7 @@ export async function POST(request) {
         const localSalary = formData.get('localSalary') === 'true';
         const intlSalary = formData.get('intlSalary') === 'true';
         const contactInfo = formData.get('contactInfo');
+        const telegramUsername = formData.get('telegramUsername') || '';
 
         // Main photo (required)
         const mainPhoto = formData.get('mainPhoto');
@@ -81,6 +82,7 @@ export async function POST(request) {
             photoUrl: mainPhotoUpload.secure_url,
             additionalPhotos: additionalPhotoUrls,
             contactInfo,
+            telegramUsername,
             isActive: true // Auto-activate (can be moderated by admin later)
         });
 

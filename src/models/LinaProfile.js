@@ -11,6 +11,7 @@ const LinaProfileSchema = new mongoose.Schema({
     photoUrl: { type: String, required: true }, // Cloudinary main photo
     additionalPhotos: [{ type: String }], // Cloudinary additional photos
     contactInfo: { type: String, required: true }, // Phone number
+    telegramUsername: { type: String }, // Optional Telegram username (e.g., @username)
     voiceId: { type: String, default: 'voice1' }, // Audio instruction file
     isActive: { type: Boolean, default: true }, // Admin can hide profiles
     createdAt: { type: Date, default: Date.now }

@@ -10,6 +10,7 @@ export default function AdminEditLinaModal({ isOpen, onClose, profile, onSave })
         city: '',
         neighborhood: '',
         contactInfo: '',
+        telegramUsername: '',
         localSalary: false,
         intlSalary: false,
         isActive: true
@@ -25,6 +26,7 @@ export default function AdminEditLinaModal({ isOpen, onClose, profile, onSave })
                 city: profile.city || '',
                 neighborhood: profile.neighborhood || '',
                 contactInfo: profile.contactInfo || '',
+                telegramUsername: profile.telegramUsername || '',
                 localSalary: profile.localSalary || false,
                 intlSalary: profile.intlSalary || false,
                 isActive: profile.isActive ?? true
@@ -110,6 +112,19 @@ export default function AdminEditLinaModal({ isOpen, onClose, profile, onSave })
                                         onChange={handleChange}
                                         className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500 outline-none"
                                         required
+                                    />
+                                </div>
+
+                                {/* Telegram Username */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Telegram Username (Optional)</label>
+                                    <input
+                                        type="text"
+                                        name="telegramUsername"
+                                        value={formData.telegramUsername}
+                                        onChange={handleChange}
+                                        placeholder="@username"
+                                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500 outline-none"
                                     />
                                 </div>
 
