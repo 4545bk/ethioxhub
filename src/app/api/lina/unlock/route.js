@@ -5,7 +5,7 @@ import LinaUnlock from '@/models/LinaUnlock';
 import User from '@/models/User';
 import { requireAuth } from '@/lib/middleware';
 
-const UNLOCK_COST = 1000; // ETB
+const UNLOCK_COST = 1000 * 100; // 1000 ETB in cents
 
 export async function POST(request) {
     try {
@@ -50,7 +50,7 @@ export async function POST(request) {
 
         if (userDoc.balance < UNLOCK_COST) {
             return NextResponse.json({
-                error: `Insufficient balance. You need ${UNLOCK_COST} ETB. Current balance: ${userDoc.balance} ETB.`
+                error: `Insufficient balance. You need ${UNLOCK_COST / 100} ETB. Current balance: ${(userDoc.balance / 100).toFixed(2)} ETB.`
             }, { status: 400 });
         }
 
