@@ -41,6 +41,10 @@ const PhotoSchema = new mongoose.Schema({
         type: String,
         enum: ['active', 'hidden'],
         default: 'active'
+    },
+    relatedVideo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Video'
     }
 }, { timestamps: true });
 
@@ -63,5 +67,10 @@ PhotoSchema.methods.canAccess = function (user) {
 
     return false;
 };
+
+// Prevent Mongoose OverwriteModelError in development
+if (process.env.NODE_ENV !== 'production' && mongoose.models && mongoose.models.Photo) {
+    delete mongoose.models.Photo;
+}
 
 export default mongoose.models.Photo || mongoose.model('Photo', PhotoSchema);

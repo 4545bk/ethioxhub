@@ -126,6 +126,7 @@ export async function PUT(request, { params }) {
         if (body.url !== undefined) updateData.url = body.url;
         if (body.isPaid !== undefined) updateData.isPaid = body.isPaid;
         if (body.price !== undefined) updateData.price = body.price;
+        if (body.relatedVideo !== undefined) updateData.relatedVideo = body.relatedVideo;
 
         const photo = await Photo.findByIdAndUpdate(id, updateData, { new: true });
 

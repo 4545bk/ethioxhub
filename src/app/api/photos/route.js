@@ -22,6 +22,7 @@ export async function GET(request) {
                 .skip(skip)
                 .limit(limit)
                 .populate('owner', 'username profilePicture')
+                .populate('relatedVideo', 'title')
                 .lean(), // Use lean for performance
             Photo.countDocuments(query)
         ]);
@@ -62,7 +63,7 @@ export async function POST(request) {
         await connectDB();
         const body = await request.json();
 
-        const { title, description, url, isPaid, price, album } = body;
+        const { title, description, url, isPaid, price, album, relatedVideo } = body;
 
         if (!title || !url) {
             return NextResponse.json({ error: 'Title and URL are required' }, { status: 400 });
@@ -76,7 +77,8 @@ export async function POST(request) {
             album: album || [], // Store album array
             isPaid: !!isPaid,
             price: price ? parseInt(price) : 0,
-            status: 'active'
+            status: 'active',
+            relatedVideo: relatedVideo || undefined
         });
 
         // Add 'likes' as empty array for response consistency if needed
