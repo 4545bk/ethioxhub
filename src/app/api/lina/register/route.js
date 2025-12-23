@@ -1,14 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import LinaProfile from '@/models/LinaProfile';
-import cloudinary from 'cloudinary';
-
-// Configure Cloudinary
-cloudinary.v2.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
+import cloudinary from '@/lib/cloudinary';
 
 export async function POST(request) {
     try {
@@ -51,7 +44,7 @@ export async function POST(request) {
         // Upload main photo to Cloudinary
         const mainPhotoBuffer = Buffer.from(await mainPhoto.arrayBuffer());
         const mainPhotoUpload = await new Promise((resolve, reject) => {
-            cloudinary.v2.uploader.upload_stream(
+            cloudinary.uploader.upload_stream(
                 { folder: 'lina-profiles', resource_type: 'image' },
                 (error, result) => {
                     if (error) reject(error);
@@ -65,7 +58,7 @@ export async function POST(request) {
         for (const photo of additionalPhotos) {
             const buffer = Buffer.from(await photo.arrayBuffer());
             const upload = await new Promise((resolve, reject) => {
-                cloudinary.v2.uploader.upload_stream(
+                cloudinary.uploader.upload_stream(
                     { folder: 'lina-profiles', resource_type: 'image' },
                     (error, result) => {
                         if (error) reject(error);
