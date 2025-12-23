@@ -17,7 +17,12 @@ export default function AdminLinaPage() {
 
     const fetchProfiles = async () => {
         try {
-            const res = await fetch('/api/admin/lina/profiles');
+            const token = localStorage.getItem('accessToken');
+            const res = await fetch('/api/admin/lina/profiles', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             if (data.success) {
                 setProfiles(data.profiles);
@@ -35,8 +40,12 @@ export default function AdminLinaPage() {
         if (!confirm('Are you sure you want to delete this profile? This cannot be undone.')) return;
 
         try {
+            const token = localStorage.getItem('accessToken');
             const res = await fetch(`/api/admin/lina/profiles/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             const data = await res.json();
 
@@ -53,9 +62,13 @@ export default function AdminLinaPage() {
 
     const handleToggleStatus = async (id, currentStatus) => {
         try {
+            const token = localStorage.getItem('accessToken');
             const res = await fetch(`/api/admin/lina/profiles/${id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ isActive: !currentStatus })
             });
             const data = await res.json();
