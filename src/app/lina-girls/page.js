@@ -1,17 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function LinaGirlsPage() {
     const router = useRouter();
+    const { success, error: showError } = useToast();
+
     const [profiles, setProfiles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [unlocking, setUnlocking] = useState(null);
     const [playingVoice, setPlayingVoice] = useState(null);
+
+    // Custom Confirm Modal State
+    const [confirmProfile, setConfirmProfile] = useState(null);
 
     useEffect(() => {
         fetchProfiles();
@@ -38,38 +44,45 @@ export default function LinaGirlsPage() {
         }
     };
 
-    const handleUnlock = async (profileId) => {
+    const requestUnlock = (profile) => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
             router.push('/login?redirect=/lina-girls');
             return;
         }
+        setConfirmProfile(profile);
+    };
 
-        if (confirm('Unlock this profile for 1000 ETB?')) {
-            setUnlocking(profileId);
-            try {
-                const res = await fetch('/api/lina/unlock', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ profileId })
-                });
+    const handleUnlockConfirm = async () => {
+        if (!confirmProfile) return;
 
-                const result = await res.json();
+        const profileId = confirmProfile._id;
+        setConfirmProfile(null);
+        setUnlocking(profileId);
 
-                if (result.success) {
-                    alert(result.message);
-                    fetchProfiles(); // Refresh to show unlocked state
-                } else {
-                    alert('Error: ' + result.error);
-                }
-            } catch (err) {
-                alert('Failed to unlock profile. Please try again.');
-            } finally {
-                setUnlocking(null);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const res = await fetch('/api/lina/unlock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ profileId })
+            });
+
+            const result = await res.json();
+
+            if (result.success) {
+                success(result.message);
+                fetchProfiles();
+            } else {
+                showError(result.error);
             }
+        } catch (err) {
+            showError('Failed to unlock profile. Please try again.');
+        } finally {
+            setUnlocking(null);
         }
     };
 
@@ -214,7 +227,7 @@ export default function LinaGirlsPage() {
                                         {/* Unlock Button */}
                                         {!profile.isUnlocked && (
                                             <button
-                                                onClick={() => handleUnlock(profile._id)}
+                                                onClick={() => requestUnlock(profile)}
                                                 disabled={unlocking === profile._id}
                                                 className="w-full py-2 bg-orange-500 text-white rounded-lg font-medium shadow hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
@@ -234,6 +247,45 @@ export default function LinaGirlsPage() {
                     )}
                 </main>
             </div>
+
+            {/* Custom Confirmation Modal */}
+            <AnimatePresence>
+                {confirmProfile && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-gray-900 rounded-2xl border border-gray-700 p-6 max-w-sm w-full shadow-2xl"
+                        >
+                            <div className="text-center">
+                                <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-3xl">🔓</span>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">Unlock Profile?</h3>
+                                <p className="text-gray-400 mb-6">
+                                    Unlock <span className="text-white font-semibold">{confirmProfile.name}</span>'s full details for <span className="text-orange-500 font-bold">1000 ETB</span>?
+                                </p>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        onClick={() => setConfirmProfile(null)}
+                                        className="py-2.5 px-4 bg-gray-800 text-gray-300 rounded-xl font-medium hover:bg-gray-700 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleUnlockConfirm}
+                                        className="py-2.5 px-4 bg-orange-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition transform hover:-translate-y-0.5"
+                                    >
+                                        Confirm Unlock
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
