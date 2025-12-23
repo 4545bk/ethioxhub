@@ -147,15 +147,17 @@ export default function LinaGirlsPage() {
 
                                     {/* Details */}
                                     <div className="p-4">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex-1 min-w-0 pr-2">
-                                                <h2 className="text-lg font-semibold text-white truncate">
-                                                    {profile.name}
-                                                </h2>
-                                                <p className="text-[10px] text-orange-400 font-medium animate-pulse">
+                                        <div className="flex items-center justify-between mb-2 gap-2">
+                                            <h2 className="text-lg font-semibold text-white truncate max-w-[40%]">
+                                                {profile.name}
+                                            </h2>
+
+                                            <div className="flex-1 flex items-center justify-end mr-2">
+                                                <span className="text-[10px] text-orange-400 font-bold animate-pulse whitespace-nowrap">
                                                     Play audio 👉🏻👉🏻
-                                                </p>
+                                                </span>
                                             </div>
+
                                             <button
                                                 onClick={() => toggleVoice(profile._id)}
                                                 className="flex-shrink-0 p-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition shadow-lg hover:shadow-orange-500/50"
