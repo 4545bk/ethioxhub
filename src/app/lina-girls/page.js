@@ -20,6 +20,7 @@ export default function LinaGirlsPage() {
     // Custom Confirm Modal State
     const [confirmProfile, setConfirmProfile] = useState(null); // Profile object to confirm unlock
     const [insufficientFundsModal, setInsufficientFundsModal] = useState(null);
+    const [activePhotos, setActivePhotos] = useState({}); // Track active photo for each profile { [id]: url }
 
     useEffect(() => {
         fetchProfiles();
@@ -224,10 +225,9 @@ Check her out: ${shareUrl}
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="bg-gray-900 rounded-xl shadow-xl overflow-hidden transform transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border border-gray-800"
                                 >
-                                    {/* Photo */}
                                     <div className="relative w-full h-80">
                                         <img
-                                            src={profile.photoUrl}
+                                            src={activePhotos[profile._id] || profile.photoUrl}
                                             alt={profile.name}
                                             className={`w-full h-full object-cover ${!profile.isUnlocked ? 'opacity-70' : ''}`}
                                             loading="lazy"
@@ -302,13 +302,29 @@ Check her out: ${shareUrl}
 
                                         {/* Additional Photos (Unlocked Only) */}
                                         {profile.additionalPhotos?.length > 0 && (
-                                            <div className="mb-3 flex space-x-2 overflow-x-auto no-scrollbar">
+                                            <div className="mb-3 flex space-x-2 overflow-x-auto no-scrollbar pb-2">
+                                                {/* Main Photo Thumbnail - So they can switch back */}
+                                                <img
+                                                    src={profile.photoUrl}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Prevent card click
+                                                        setActivePhotos(prev => ({ ...prev, [profile._id]: profile.photoUrl }));
+                                                    }}
+                                                    alt="Main"
+                                                    className={`w-14 h-14 object-cover rounded-lg shadow-md transition flex-shrink-0 cursor-pointer border-2 ${activePhotos[profile._id] === profile.photoUrl || (!activePhotos[profile._id] && !false) ? 'border-orange-500 scale-105' : 'border-transparent hover:scale-110'}`}
+                                                />
+
+                                                {/* Extra Photos */}
                                                 {profile.additionalPhotos.map((photo, index) => (
                                                     <img
                                                         key={index}
                                                         src={photo}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setActivePhotos(prev => ({ ...prev, [profile._id]: photo }));
+                                                        }}
                                                         alt={`Extra ${index + 1}`}
-                                                        className="w-14 h-14 object-cover rounded-lg shadow-md hover:scale-110 transition flex-shrink-0"
+                                                        className={`w-14 h-14 object-cover rounded-lg shadow-md transition flex-shrink-0 cursor-pointer border-2 ${activePhotos[profile._id] === photo ? 'border-orange-500 scale-105' : 'border-transparent hover:scale-110'}`}
                                                     />
                                                 ))}
                                             </div>

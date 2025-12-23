@@ -10,6 +10,7 @@ export default function LinaProfileView({ id }) {
     const toast = useToast();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [activePhoto, setActivePhoto] = useState(null);
 
     useEffect(() => {
         fetchProfile();
@@ -25,6 +26,7 @@ export default function LinaProfileView({ id }) {
 
             if (data.success) {
                 setProfile(data.profile);
+                setActivePhoto(data.profile.photoUrl);
             } else {
                 toast.error('Profile not found');
                 router.push('/lina-girls');
@@ -73,12 +75,12 @@ export default function LinaProfileView({ id }) {
                     {/* Profile Card - Centered */}
                     <div className="max-w-md mx-auto">
                         <div className="bg-gray-900 rounded-xl shadow-2xl overflow-hidden border border-gray-800">
-                            {/* Photo */}
-                            <div className="relative w-full h-96">
+                            {/* Main Photo */}
+                            <div className="relative w-full h-96 bg-gray-800">
                                 <img
-                                    src={profile.photoUrl}
+                                    src={activePhoto || profile.photoUrl}
                                     alt={profile.name}
-                                    className={`w-full h-full object-cover ${!profile.isUnlocked ? 'opacity-70' : ''}`}
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${!profile.isUnlocked ? 'opacity-70' : ''}`}
                                 />
                             </div>
 
@@ -103,7 +105,7 @@ export default function LinaProfileView({ id }) {
                                 </p>
 
                                 {profile.isUnlocked ? (
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         <div className="p-4 bg-green-600/10 border border-green-600 rounded-lg">
                                             <p className="text-sm text-white font-bold mb-1">📞 Contact:</p>
                                             <p className="text-lg text-green-400 font-bold">{profile.contactInfo}</p>
@@ -125,15 +127,33 @@ export default function LinaProfileView({ id }) {
 
                                         {profile.additionalPhotos?.length > 0 && (
                                             <div>
-                                                <p className="text-sm text-gray-400 mb-2">Additional Photos:</p>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {profile.additionalPhotos.map((photo, index) => (
+                                                <p className="text-sm text-gray-400 mb-2">Photos (Click to view):</p>
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    {/* Main Photo Thumbnail */}
+                                                    <div
+                                                        onClick={() => setActivePhoto(profile.photoUrl)}
+                                                        className={`relative h-20 rounded-lg overflow-hidden cursor-pointer border-2 ${activePhoto === profile.photoUrl ? 'border-orange-500' : 'border-transparent'}`}
+                                                    >
                                                         <img
-                                                            key={index}
-                                                            src={photo}
-                                                            alt={`Extra ${index + 1}`}
-                                                            className="w-full h-24 object-cover rounded-lg shadow-md"
+                                                            src={profile.photoUrl}
+                                                            alt="Main"
+                                                            className="w-full h-full object-cover"
                                                         />
+                                                    </div>
+
+                                                    {/* Additional Photos Thumbnails */}
+                                                    {profile.additionalPhotos.map((photo, index) => (
+                                                        <div
+                                                            key={index}
+                                                            onClick={() => setActivePhoto(photo)}
+                                                            className={`relative h-20 rounded-lg overflow-hidden cursor-pointer border-2 ${activePhoto === photo ? 'border-orange-500' : 'border-transparent'}`}
+                                                        >
+                                                            <img
+                                                                src={photo}
+                                                                alt={`Extra ${index + 1}`}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
                                                     ))}
                                                 </div>
                                             </div>
