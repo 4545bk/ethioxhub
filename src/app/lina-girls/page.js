@@ -127,10 +127,14 @@ export default function LinaGirlsPage() {
         if (profile.intlSalary) parts.push('Intl (15k-20k)');
         const salaryText = parts.length > 0 ? `💼 ${parts.join(' • ')}` : '';
 
+        const formattedCity = profile.city && profile.city.trim() === 'Addis Ababa'
+            ? 'Addis Ababa (አዲስ አበባ)'
+            : profile.city;
+
         const shareText = `✨ We have added a new girl! / አዲስ ልጅ አክለናል! ✨
 
 ${profile.name} - ${profile.age} yrs
-${profile.city}, ${profile.country}
+${formattedCity}, ${profile.country}
 ${salaryText}
 📞 09XXXXXXX
 

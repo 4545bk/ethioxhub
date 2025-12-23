@@ -24,7 +24,12 @@ export async function generateMetadata({ params }) {
         if (profile.intlSalary) parts.push('Intl (15k-20k)');
         const salaryInfo = parts.length > 0 ? `💼 ${parts.join(' • ')}` : '';
 
-        const description = `${profile.age} years old from ${profile.city}. ${salaryInfo} 📞 09XXXXXXX... Check her profile on EthioxHub.`;
+        // Format city (Add Amharic if Addis Ababa)
+        const formattedCity = profile.city && profile.city.trim() === 'Addis Ababa'
+            ? 'Addis Ababa (አዲስ አበባ)'
+            : profile.city;
+
+        const description = `${profile.age} years old from ${formattedCity}. ${salaryInfo} 📞 09XXXXXXX... Check her profile on EthioxHub.`;
 
         return {
             title: `Meet ${profile.name} - Lina Girls`,
