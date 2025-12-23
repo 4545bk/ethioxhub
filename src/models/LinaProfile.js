@@ -17,4 +17,9 @@ const LinaProfileSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
+// Prevent Mongoose OverwriteModelError in development
+if (process.env.NODE_ENV !== 'production' && mongoose.models && mongoose.models.LinaProfile) {
+    delete mongoose.models.LinaProfile;
+}
+
 export default mongoose.models.LinaProfile || mongoose.model('LinaProfile', LinaProfileSchema);

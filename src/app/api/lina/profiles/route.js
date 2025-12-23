@@ -60,6 +60,7 @@ export async function GET(request) {
                         : profile.photoUrl.replace('/upload/', '/upload/e_blur:1000/'),
                     additionalPhotos: isUnlocked ? profile.additionalPhotos || [] : [],
                     contactInfo: isUnlocked ? profile.contactInfo : blurPhoneNumber(profile.contactInfo),
+                    telegramUsername: isUnlocked ? profile.telegramUsername : null,
                     voiceId: profile.voiceId,
                     isUnlocked,
                 };
