@@ -153,7 +153,7 @@ export default function LinaGirlsPage() {
                                             </h2>
 
                                             <div className="flex-1 flex items-center justify-end mr-2">
-                                                <span className="text-[10px] text-orange-400 font-bold animate-pulse whitespace-nowrap">
+                                                <span className="text-xs text-white font-bold animate-pulse whitespace-nowrap">
                                                     Play audio 👉🏻👉🏻
                                                 </span>
                                             </div>
