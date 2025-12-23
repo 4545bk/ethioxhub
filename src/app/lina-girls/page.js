@@ -148,12 +148,17 @@ export default function LinaGirlsPage() {
                                     {/* Details */}
                                     <div className="p-4">
                                         <div className="flex items-center justify-between mb-2">
-                                            <h2 className="text-lg font-semibold text-white">
-                                                {profile.name}
-                                            </h2>
+                                            <div className="flex-1 min-w-0 pr-2">
+                                                <h2 className="text-lg font-semibold text-white truncate">
+                                                    {profile.name}
+                                                </h2>
+                                                <p className="text-[10px] text-orange-400 font-medium animate-pulse">
+                                                    Play audio 👉🏻👉🏻
+                                                </p>
+                                            </div>
                                             <button
                                                 onClick={() => toggleVoice(profile._id)}
-                                                className="p-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition"
+                                                className="flex-shrink-0 p-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition shadow-lg hover:shadow-orange-500/50"
                                                 title="Play instructions"
                                             >
                                                 {playingVoice === profile._id ? (
