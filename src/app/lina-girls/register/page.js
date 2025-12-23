@@ -7,16 +7,59 @@ import Navbar from '@/components/Navbar';
 
 export default function LinaRegisterPage() {
     const router = useRouter();
+
+    // Options with Amharic translations
+    const countries = [
+        "Ethiopia (ኢትዮጵያ)",
+        "Dubai (ዱባይ)",
+        "UAE (ዩ.ኤ.ኢ)",
+        "South Africa (ደቡብ አፍሪካ)",
+        "United States (አሜሪካ)",
+        "United Kingdom (እንግሊዝ)"
+    ];
+
+    const ethiopianCities = [
+        "Addis Ababa (አዲስ አበባ)",
+        "Hawassa (ሀዋሳ)",
+        "Adama (አዳማ)",
+        "Harer (ሐረር)",
+        "Dire Dawa (ድሬዳዋ)"
+    ];
+
+    const addisNeighborhoods = [
+        "Kazanchis (ካዛንቺስ)",
+        "Ayat (አያት)",
+        "Summit (ሰሚት)",
+        "Piassa (ፒያሳ)",
+        "22 (ሃያ ሁለት)",
+        "Megenagna (መገናኛ)",
+        "Bole (ቦሌ)",
+        "Saris (ሳሪስ)",
+        "Gerji (ገርጂ)",
+        "Sar Bet (ሳር ቤት)",
+        "Mebrat Hail (መብራት ሀይል)",
+        "Asco (አስኮ)",
+        "Kebena (ቀበና)",
+        "Tulu Dimtu (ቱሉ ዲምቱ)",
+        "6 Kilo (6ኪሎ)",
+        "Wesen (ወሰን)",
+        "Kechen (ቀጨኔ)",
+        "Gofa (ጎፋ)",
+    ];
+
     const [formData, setFormData] = useState({
         name: '',
         age: '',
         country: '',
         city: '',
         neighborhood: '',
+        customNeighborhood: false, // Checkbox state
+        agreeToSalary: false,
         localSalary: false,
         intlSalary: false,
         contactInfo: ''
     });
+
     const [mainPhoto, setMainPhoto] = useState(null);
     const [additionalPhotos, setAdditionalPhotos] = useState([null, null, null]);
     const [submitting, setSubmitting] = useState(false);
@@ -24,10 +67,31 @@ export default function LinaRegisterPage() {
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+
+        // Special logic for location resets
+        if (name === 'country') {
+            setFormData(prev => ({
+                ...prev,
+                country: value,
+                // Reset city/neighborhood if country changes
+                city: '',
+                neighborhood: '',
+                customNeighborhood: false
+            }));
+        } else if (name === 'city') {
+            setFormData(prev => ({
+                ...prev,
+                city: value,
+                // Reset neighborhood if city changes
+                neighborhood: '',
+                customNeighborhood: false
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }));
+        }
     };
 
     const handleAdditionalPhoto = (index, file) => {
@@ -45,6 +109,11 @@ export default function LinaRegisterPage() {
             return;
         }
 
+        if (!formData.agreeToSalary) {
+            setError('You must agree to the salary terms');
+            return;
+        }
+
         if (!formData.localSalary && !formData.intlSalary) {
             setError('Please select at least one salary preference');
             return;
@@ -57,7 +126,12 @@ export default function LinaRegisterPage() {
 
             // Append all form fields
             Object.keys(formData).forEach(key => {
-                form.append(key, formData[key]);
+                // Handle special logic for neighborhood
+                if (key === 'neighborhood' && formData.customNeighborhood) {
+                    form.append(key, formData.neighborhood);
+                } else if (key !== 'customNeighborhood') {
+                    form.append(key, formData[key]);
+                }
             });
 
             // Append photos
@@ -76,7 +150,10 @@ export default function LinaRegisterPage() {
             const result = await res.json();
 
             if (result.success) {
-                alert(result.message);
+                // Success State - Redirect or Show Message
+                // Use alert for simplicity or create a success UI. 
+                // Given the request didn't specify success UI in detail, reusing alert then redirect.
+                alert('Registration successful! You will be contacted soon.');
                 router.push('/lina-girls');
             } else {
                 setError(result.error);
@@ -157,67 +234,142 @@ export default function LinaRegisterPage() {
                                 required
                                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                             >
-                                <option value="" className="bg-gray-800">Select your country</option>
-                                <option value="Ethiopia" className="bg-gray-800">Ethiopia</option>
-                                <option value="Kenya" className="bg-gray-800">Kenya</option>
-                                <option value="Uganda" className="bg-gray-800">Uganda</option>
-                                <option value="Tanzania" className="bg-gray-800">Tanzania</option>
-                                <option value="Other" className="bg-gray-800">Other</option>
+                                <option value="" className="bg-gray-800">Select your country (ሀገር ይምረጡ)</option>
+                                {countries.map((country) => (
+                                    <option key={country} value={country} className="bg-gray-800">
+                                        {country}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
-                        {/* City */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                City (Optional)
-                            </label>
-                            <input
-                                type="text"
-                                name="city"
-                                value={formData.city}
-                                onChange={handleInputChange}
-                                placeholder="e.g., Addis Ababa"
-                                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
-                            />
-                        </div>
+                        {/* City Logic */}
+                        {formData.country && (
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                                    City *
+                                </label>
+                                {formData.country.includes("Ethiopia") ? (
+                                    <select
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={handleInputChange}
+                                        required
+                                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                                    >
+                                        <option value="" className="bg-gray-800">Select your city (ከተማ ይምረጡ)</option>
+                                        {ethiopianCities.map((city) => (
+                                            <option key={city} value={city} className="bg-gray-800">
+                                                {city}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter your city"
+                                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
+                                    />
+                                )}
+                            </div>
+                        )}
 
-                        {/* Neighborhood */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                Neighborhood/Area (Optional)
-                            </label>
-                            <input
-                                type="text"
-                                name="neighborhood"
-                                value={formData.neighborhood}
-                                onChange={handleInputChange}
-                                placeholder="e.g., Bole, Piassa"
-                                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
-                            />
-                        </div>
+                        {/* Neighborhood Logic */}
+                        {formData.city && (
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                                    Neighborhood/Area (Optional)
+                                </label>
+                                {formData.city.includes("Addis Ababa") ? (
+                                    <div className="space-y-3">
+                                        {!formData.customNeighborhood && (
+                                            <select
+                                                name="neighborhood"
+                                                value={formData.neighborhood}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                                            >
+                                                <option value="" className="bg-gray-800">Select your neighborhood (ሰፈር ይምረጡ)</option>
+                                                {addisNeighborhoods.map((hood) => (
+                                                    <option key={hood} value={hood} className="bg-gray-800">
+                                                        {hood}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+                                        {formData.customNeighborhood && (
+                                            <input
+                                                type="text"
+                                                name="neighborhood"
+                                                value={formData.neighborhood}
+                                                onChange={handleInputChange}
+                                                placeholder="Write your place (ቦታዎን ይጻፉ)"
+                                                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
+                                            />
+                                        )}
+                                        <label className="flex items-center space-x-2 text-sm text-gray-400 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                name="customNeighborhood"
+                                                checked={formData.customNeighborhood}
+                                                onChange={handleInputChange}
+                                                className="w-4 h-4 text-orange-600 rounded bg-gray-800 border-gray-600 focus:ring-orange-500"
+                                            />
+                                            <span>Write your place if not listed (ከዝርዝሩ ውስጥ ከሌለ ይጻፉ)</span>
+                                        </label>
+                                    </div>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        name="neighborhood"
+                                        value={formData.neighborhood}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter your neighborhood"
+                                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
+                                    />
+                                )}
+                            </div>
+                        )}
 
                         {/* Salary Preferences */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-3">
                                 Salary Preferences (I agree to work for this Price) *
                             </label>
-                            <div className="space-y-2">
-                                <label className="flex items-center cursor-pointer">
+
+                            <label className="flex items-center space-x-2 mb-3 text-sm text-gray-400 cursor-pointer p-2 rounded hover:bg-gray-800/50">
+                                <input
+                                    type="checkbox"
+                                    name="agreeToSalary"
+                                    checked={formData.agreeToSalary}
+                                    onChange={handleInputChange}
+                                    className="w-4 h-4 text-orange-600 rounded bg-gray-800 border-gray-600 focus:ring-orange-500"
+                                />
+                                <span>I agree to work for the selected Price</span>
+                            </label>
+
+                            <div className="space-y-2 ml-4">
+                                <label className={`flex items-center cursor-pointer ${!formData.agreeToSalary ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                     <input
                                         type="checkbox"
                                         name="localSalary"
                                         checked={formData.localSalary}
                                         onChange={handleInputChange}
+                                        disabled={!formData.agreeToSalary}
                                         className="w-5 h-5 text-orange-600 rounded bg-gray-800 border-gray-600 focus:ring-orange-500"
                                     />
                                     <span className="ml-3 text-gray-300">Local Client (5k-10k)</span>
                                 </label>
-                                <label className="flex items-center cursor-pointer">
+                                <label className={`flex items-center cursor-pointer ${!formData.agreeToSalary ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                     <input
                                         type="checkbox"
                                         name="intlSalary"
                                         checked={formData.intlSalary}
                                         onChange={handleInputChange}
+                                        disabled={!formData.agreeToSalary}
                                         className="w-5 h-5 text-orange-600 rounded bg-gray-800 border-gray-600 focus:ring-orange-500"
                                     />
                                     <span className="ml-3 text-gray-300">International Client (15k-20k)</span>
