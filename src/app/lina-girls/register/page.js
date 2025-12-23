@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import SuccessModal from '@/components/modals/SuccessModal';
 
 export default function LinaRegisterPage() {
     const router = useRouter();
@@ -64,6 +65,7 @@ export default function LinaRegisterPage() {
     const [additionalPhotos, setAdditionalPhotos] = useState([null, null, null]);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -144,8 +146,7 @@ export default function LinaRegisterPage() {
             const result = await res.json();
 
             if (result.success) {
-                alert('Registration successful! You will be contacted soon. (ምዝገባው ተሳክቷል! በቅርቡ እናገኝዎታለን)');
-                router.push('/lina-girls');
+                setShowSuccess(true);
             } else {
                 setError(result.error);
             }
@@ -428,6 +429,16 @@ export default function LinaRegisterPage() {
                     </form>
                 </motion.div>
             </div>
+
+            {/* Success Modal */}
+            <SuccessModal
+                isOpen={showSuccess}
+                onClose={() => router.push('/lina-girls')}
+                title="Registration Successful! (ምዝገባው ተሳክቷል!)"
+                message="You will be contacted soon. (በቅርቡ እናገኝዎታለን)"
+                actionLabel="Go to Gallery (ወደ ጋለሪ ይሂዱ)"
+                onAction={() => router.push('/lina-girls')}
+            />
         </div>
     );
 }
