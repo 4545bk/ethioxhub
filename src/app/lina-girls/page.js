@@ -119,10 +119,10 @@ export default function LinaGirlsPage() {
     }
 
     const shareProfile = async (profile) => {
-        const shareUrl = `${window.location.origin}/lina-girls`;
+        const shareUrl = `${window.location.origin}/lina-girls/${profile._id}`;
         const blurredPhotoUrl = profile.photoUrl.replace('/upload/', '/upload/e_blur:1000/');
 
-        const shareText = `🌟 We have added a new girl! / አዲስ ልጅ አክለናል! 🌟
+        const shareText = `✨ We have added a new girl! / አዲስ ልጅ አክለናል! ✨
 
 ${profile.name} - ${profile.age} yrs
 ${profile.city}, ${profile.country}
