@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
 
 export default function LinaGirlsPage() {
     const router = useRouter();
@@ -99,6 +100,8 @@ export default function LinaGirlsPage() {
 
     return (
         <div className="min-h-screen bg-black text-white">
+            <Navbar />
+
             {/* Main Content - adjusted for fixed navbar */}
             <div className="pt-[128px]">
                 <main className="container mx-auto px-4 py-6 pb-32">
