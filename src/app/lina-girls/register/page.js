@@ -53,7 +53,7 @@ export default function LinaRegisterPage() {
         country: '',
         city: '',
         neighborhood: '',
-        customNeighborhood: false, // Checkbox state
+        customNeighborhood: false,
         agreeToSalary: false,
         localSalary: false,
         intlSalary: false,
@@ -68,12 +68,10 @@ export default function LinaRegisterPage() {
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
 
-        // Special logic for location resets
         if (name === 'country') {
             setFormData(prev => ({
                 ...prev,
                 country: value,
-                // Reset city/neighborhood if country changes
                 city: '',
                 neighborhood: '',
                 customNeighborhood: false
@@ -82,7 +80,6 @@ export default function LinaRegisterPage() {
             setFormData(prev => ({
                 ...prev,
                 city: value,
-                // Reset neighborhood if city changes
                 neighborhood: '',
                 customNeighborhood: false
             }));
@@ -105,17 +102,17 @@ export default function LinaRegisterPage() {
         setError(null);
 
         if (!mainPhoto) {
-            setError('Main photo is required');
+            setError('Main photo is required (ዋና ፎቶ ያስፈልጋል)');
             return;
         }
 
         if (!formData.agreeToSalary) {
-            setError('You must agree to the salary terms');
+            setError('You must agree to the salary terms (በደመወዝ ውሉ መስማማት አለብዎ)');
             return;
         }
 
         if (!formData.localSalary && !formData.intlSalary) {
-            setError('Please select at least one salary preference');
+            setError('Please select at least one salary preference (ቢያንስ አንድ የደመወዝ ምርጫ ይምረጡ)');
             return;
         }
 
@@ -124,9 +121,7 @@ export default function LinaRegisterPage() {
         try {
             const form = new FormData();
 
-            // Append all form fields
             Object.keys(formData).forEach(key => {
-                // Handle special logic for neighborhood
                 if (key === 'neighborhood' && formData.customNeighborhood) {
                     form.append(key, formData.neighborhood);
                 } else if (key !== 'customNeighborhood') {
@@ -134,7 +129,6 @@ export default function LinaRegisterPage() {
                 }
             });
 
-            // Append photos
             form.append('mainPhoto', mainPhoto);
             additionalPhotos.forEach((photo, index) => {
                 if (photo) {
@@ -150,16 +144,13 @@ export default function LinaRegisterPage() {
             const result = await res.json();
 
             if (result.success) {
-                // Success State - Redirect or Show Message
-                // Use alert for simplicity or create a success UI. 
-                // Given the request didn't specify success UI in detail, reusing alert then redirect.
-                alert('Registration successful! You will be contacted soon.');
+                alert('Registration successful! You will be contacted soon. (ምዝገባው ተሳክቷል! በቅርቡ እናገኝዎታለን)');
                 router.push('/lina-girls');
             } else {
                 setError(result.error);
             }
         } catch (err) {
-            setError('Network error. Please try again.');
+            setError('Network error. Please try again. (የኔትወርክ ስህተት። እባክዎ እንደገና ይሞክሩ)');
         } finally {
             setSubmitting(false);
         }
@@ -176,10 +167,11 @@ export default function LinaRegisterPage() {
                     className="max-w-2xl mx-auto bg-gray-900 rounded-xl shadow-2xl p-8 border border-gray-800"
                 >
                     <h1 className="text-3xl font-extrabold text-white mb-2 text-center">
-                        Lina Agency Registration
+                        Lina Agency Registration <span className="block text-xl font-medium text-orange-500 mt-1">(ሊና ኤጀንሲ ምዝገባ)</span>
                     </h1>
                     <p className="text-gray-400 text-center mb-8">
-                        Fill out the form below to join our platform
+                        Fill out the form below to join our platform <br />
+                        <span className="text-sm">(ለመቀላቀል ከታች ያለውን ቅጽ ይሙሉ)</span>
                     </p>
 
                     {error && (
@@ -192,14 +184,14 @@ export default function LinaRegisterPage() {
                         {/* Full Name */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                Full Name *
+                                Full Name (ሙሉ ስም) *
                             </label>
                             <input
                                 type="text"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleInputChange}
-                                placeholder="Enter your name"
+                                placeholder="Enter your name (ስምዎን ያስገቡ)"
                                 required
                                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
                             />
@@ -208,14 +200,14 @@ export default function LinaRegisterPage() {
                         {/* Age */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                Age * (Must be 18+)
+                                Age (እድሜ) * <span className="text-xs text-gray-500">(Must be 18+ / 18 ዓመት እና ከዚያ በላይ)</span>
                             </label>
                             <input
                                 type="number"
                                 name="age"
                                 value={formData.age}
                                 onChange={handleInputChange}
-                                placeholder="Enter your age"
+                                placeholder="Enter your age (እድሜዎን ያስገቡ)"
                                 min="18"
                                 required
                                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
@@ -225,7 +217,7 @@ export default function LinaRegisterPage() {
                         {/* Country */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                Country *
+                                Country (ሀገር) *
                             </label>
                             <select
                                 name="country"
@@ -247,7 +239,7 @@ export default function LinaRegisterPage() {
                         {formData.country && (
                             <div>
                                 <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                    City *
+                                    City (ከተማ) *
                                 </label>
                                 {formData.country.includes("Ethiopia") ? (
                                     <select
@@ -270,7 +262,7 @@ export default function LinaRegisterPage() {
                                         name="city"
                                         value={formData.city}
                                         onChange={handleInputChange}
-                                        placeholder="Enter your city"
+                                        placeholder="Enter your city (ከተማዎን ያስገቡ)"
                                         className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
                                     />
                                 )}
@@ -281,7 +273,7 @@ export default function LinaRegisterPage() {
                         {formData.city && (
                             <div>
                                 <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                    Neighborhood/Area (Optional)
+                                    Neighborhood/Area (ሰፈር) (Optional)
                                 </label>
                                 {formData.city.includes("Addis Ababa") ? (
                                     <div className="space-y-3">
@@ -327,7 +319,7 @@ export default function LinaRegisterPage() {
                                         name="neighborhood"
                                         value={formData.neighborhood}
                                         onChange={handleInputChange}
-                                        placeholder="Enter your neighborhood"
+                                        placeholder="Enter your neighborhood (ሰፈርዎን ያስገቡ)"
                                         className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
                                     />
                                 )}
@@ -337,7 +329,7 @@ export default function LinaRegisterPage() {
                         {/* Salary Preferences */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-3">
-                                Salary Preferences (I agree to work for this Price) *
+                                Salary Preferences (የደመወዝ ምርጫዎች) *
                             </label>
 
                             <label className="flex items-center space-x-2 mb-3 text-sm text-gray-400 cursor-pointer p-2 rounded hover:bg-gray-800/50">
@@ -348,7 +340,7 @@ export default function LinaRegisterPage() {
                                     onChange={handleInputChange}
                                     className="w-4 h-4 text-orange-600 rounded bg-gray-800 border-gray-600 focus:ring-orange-500"
                                 />
-                                <span>I agree to work for the selected Price</span>
+                                <span>I agree to work for the selected Price (በተመረጠው ዋጋ ለመስራት እስማማለሁ)</span>
                             </label>
 
                             <div className="space-y-2 ml-4">
@@ -361,7 +353,7 @@ export default function LinaRegisterPage() {
                                         disabled={!formData.agreeToSalary}
                                         className="w-5 h-5 text-orange-600 rounded bg-gray-800 border-gray-600 focus:ring-orange-500"
                                     />
-                                    <span className="ml-3 text-gray-300">Local Client (5k-10k)</span>
+                                    <span className="ml-3 text-gray-300">Local Client (5k-10k) (ለሀገር ውስጥ - 5k-10k)</span>
                                 </label>
                                 <label className={`flex items-center cursor-pointer ${!formData.agreeToSalary ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                     <input
@@ -372,7 +364,7 @@ export default function LinaRegisterPage() {
                                         disabled={!formData.agreeToSalary}
                                         className="w-5 h-5 text-orange-600 rounded bg-gray-800 border-gray-600 focus:ring-orange-500"
                                     />
-                                    <span className="ml-3 text-gray-300">International Client (15k-20k)</span>
+                                    <span className="ml-3 text-gray-300">International Client (15k-20k) (ለውጭ ሀገር - 15k-20k)</span>
                                 </label>
                             </div>
                         </div>
@@ -380,7 +372,7 @@ export default function LinaRegisterPage() {
                         {/* Main Photo */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                Your Main Photo * (First required)
+                                Your Main Photo (ዋና ፎቶ) * <span className="text-xs font-normal text-gray-500">(First required / የመጀመሪያው ግዴታ ነው)</span>
                             </label>
                             <input
                                 type="file"
@@ -394,7 +386,7 @@ export default function LinaRegisterPage() {
                         {/* Additional Photos */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                Additional Photos (Optional, up to 3)
+                                Additional Photos (ተጨማሪ ፎቶዎች) <span className="text-xs font-normal text-gray-500">(Optional, up to 3 / እስከ 3 አማራጭ)</span>
                             </label>
                             <div className="space-y-2">
                                 {[0, 1, 2].map(index => (
@@ -412,14 +404,14 @@ export default function LinaRegisterPage() {
                         {/* Contact Info */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                Contact Info (Phone) *
+                                Contact Info (Phone/ስልክ) *
                             </label>
                             <input
                                 type="tel"
                                 name="contactInfo"
                                 value={formData.contactInfo}
                                 onChange={handleInputChange}
-                                placeholder="e.g., 0912345678"
+                                placeholder="e.g., 0912345678 (ለምሳሌ 09...)"
                                 required
                                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none placeholder-gray-500"
                             />
@@ -431,7 +423,7 @@ export default function LinaRegisterPage() {
                             disabled={submitting}
                             className="w-full py-4 bg-orange-500 text-white font-bold rounded-lg shadow-lg hover:bg-orange-600 transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {submitting ? 'Registering...' : 'Register Now'}
+                            {submitting ? 'Registering... (በመመዝገብ ላይ...)' : 'Register Now (ይመዝገቡ)'}
                         </button>
                     </form>
                 </motion.div>
