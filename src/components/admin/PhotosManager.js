@@ -77,6 +77,7 @@ export default function PhotosManager() {
     const [editingId, setEditingId] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [videoSearch, setVideoSearch] = useState('');
+    const [deleteConfirmModal, setDeleteConfirmModal] = useState(null);
 
     const toast = useToast();
 
@@ -301,23 +302,29 @@ export default function PhotosManager() {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!confirm('Are you sure you want to delete this photo?')) return;
+    const handleDelete = (photo) => {
+        setDeleteConfirmModal(photo);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirmModal) return;
 
         try {
             const token = localStorage.getItem('accessToken');
-            const res = await fetch(`/api/photos/${id}`, {
+            const res = await fetch(`/api/photos/${deleteConfirmModal._id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
-                toast.success('Deleted');
-                setPhotos(prev => prev.filter(p => p._id !== id));
+                toast.success('Photo deleted successfully');
+                setPhotos(prev => prev.filter(p => p._id !== deleteConfirmModal._id));
             } else {
-                toast.error('Failed to delete');
+                toast.error('Failed to delete photo');
             }
         } catch (err) {
-            toast.error('Error deleting');
+            toast.error('Error deleting photo');
+        } finally {
+            setDeleteConfirmModal(null);
         }
     };
 
@@ -401,7 +408,7 @@ export default function PhotosManager() {
                                         <button onClick={() => openEdit(photo)} className="text-blue-600 hover:bg-blue-50 p-2 rounded-full">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                         </button>
-                                        <button onClick={() => handleDelete(photo._id)} className="text-red-600 hover:bg-red-50 p-2 rounded-full">
+                                        <button onClick={() => handleDelete(photo)} className="text-red-600 hover:bg-red-50 p-2 rounded-full">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
                                     </td>
@@ -620,6 +627,56 @@ export default function PhotosManager() {
                             </form>
                         </motion.div>
                     </div>
+                )}
+            </AnimatePresence>
+
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {deleteConfirmModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                        onClick={() => setDeleteConfirmModal(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Photo?</h3>
+                            <p className="text-gray-600 mb-6">
+                                Are you sure you want to delete "<span className="font-semibold text-gray-900">{deleteConfirmModal.title}</span>"? This action cannot be undone.
+                            </p>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteConfirmModal(null)}
+                                    className="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Delete Photo
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>
