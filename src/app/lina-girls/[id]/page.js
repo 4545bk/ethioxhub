@@ -18,12 +18,20 @@ export async function generateMetadata({ params }) {
         // Use blurred image for sharing to maintain privacy/tease
         const blurImage = profile.photoUrl.replace('/upload/', '/upload/e_blur:1000/');
 
+        // Construct description with salary/contact info
+        const parts = [];
+        if (profile.localSalary) parts.push('Local (5k-10k)');
+        if (profile.intlSalary) parts.push('Intl (15k-20k)');
+        const salaryInfo = parts.length > 0 ? `💼 ${parts.join(' • ')}` : '';
+
+        const description = `${profile.age} years old from ${profile.city}. ${salaryInfo} 📞 09XXXXXXX... Check her profile on EthioxHub.`;
+
         return {
             title: `Meet ${profile.name} - Lina Girls`,
-            description: `${profile.age} years old from ${profile.city}. Check her profile on EthioxHub.`,
+            description: description,
             openGraph: {
                 title: `Meet ${profile.name} - Lina Girls`,
-                description: `${profile.age} years old from ${profile.city}. Check her profile on EthioxHub.`,
+                description: description,
                 images: [
                     {
                         url: blurImage,
@@ -37,7 +45,7 @@ export async function generateMetadata({ params }) {
             twitter: {
                 card: 'summary_large_image',
                 title: `Meet ${profile.name} - Lina Girls`,
-                description: `${profile.age} years old from ${profile.city}. Check her profile on EthioxHub.`,
+                description: description,
                 images: [blurImage],
             },
         };

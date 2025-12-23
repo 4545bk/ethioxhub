@@ -122,10 +122,17 @@ export default function LinaGirlsPage() {
         const shareUrl = `${window.location.origin}/lina-girls/${profile._id}`;
         const blurredPhotoUrl = profile.photoUrl.replace('/upload/', '/upload/e_blur:1000/');
 
+        const parts = [];
+        if (profile.localSalary) parts.push('Local (5k-10k)');
+        if (profile.intlSalary) parts.push('Intl (15k-20k)');
+        const salaryText = parts.length > 0 ? `💼 ${parts.join(' • ')}` : '';
+
         const shareText = `✨ We have added a new girl! / አዲስ ልጅ አክለናል! ✨
 
 ${profile.name} - ${profile.age} yrs
 ${profile.city}, ${profile.country}
+${salaryText}
+📞 09XXXXXXX
 
 Check her out: ${shareUrl}
 
