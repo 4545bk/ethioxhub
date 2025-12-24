@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import CommentsSection from '@/components/CommentsSection';
 import PurchaseModal from '@/components/PurchaseModal';
 import SubscriptionModal from '@/components/SubscriptionModal';
-import { trackAnalyticsEvent } from '@/components/AnalyticsTracker';
 import Hls from 'hls.js';
 
 // New Player Components
@@ -30,7 +29,6 @@ export default function VideoPlayerClient() {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [userLiked, setUserLiked] = useState(false);
     const [userDisliked, setUserDisliked] = useState(false);
-    const hasTrackedView = useRef(false);
 
     // Video player state
     const [isPlaying, setIsPlaying] = useState(false);
@@ -72,17 +70,7 @@ export default function VideoPlayerClient() {
 
         const videoElement = videoRef.current;
 
-        const handlePlay = () => {
-            setIsPlaying(true);
-            if (!hasTrackedView.current && video) {
-                hasTrackedView.current = true;
-                trackAnalyticsEvent('video_view', `/videos/${video._id}`, {
-                    videoId: video._id,
-                    title: video.title,
-                    category: video.category
-                });
-            }
-        };
+        const handlePlay = () => setIsPlaying(true);
         const handlePause = () => setIsPlaying(false);
         const handleTimeUpdate = () => {
             setCurrentTime(videoElement.currentTime);
