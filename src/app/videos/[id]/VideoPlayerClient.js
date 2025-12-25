@@ -172,24 +172,19 @@ export default function VideoPlayerClient() {
 
                 // Check if user has access (purchased, subscribed, free, or admin)
                 if (data.canAccess && data.video.videoUrl) {
-                    // For free videos, require authentication
-                    if (!data.video.isPaid && !isAuthenticated) {
-                        if (!authLoading) setShowLoginModal(true);
-                    } else {
+                    // Allow free videos to play without login (freemium strategy)
+                    if (!data.video.isPaid) {
                         setPlaybackUrl(data.video.videoUrl);
-                        // Player will be initialized by useEffect when videoRef is ready
+                    } else if (isAuthenticated) {
+                        // Paid videos require authentication
+                        setPlaybackUrl(data.video.videoUrl);
                     }
                 } else if (data.video.isPaid && !data.canAccess) {
                     // Show purchase modal for paid videos when user doesn't have access
                     if (!authLoading) setShowPurchaseModal(true);
                 } else if (!data.video.isPaid && data.video.videoUrl) {
-                    // Free video - check authentication
-                    if (!isAuthenticated) {
-                        if (!authLoading) setShowLoginModal(true);
-                    } else {
-                        setPlaybackUrl(data.video.videoUrl);
-                        // Player will be initialized by useEffect when videoRef is ready
-                    }
+                    // Free video - allow access without login
+                    setPlaybackUrl(data.video.videoUrl);
                 }
 
                 // Store userId for comments/likes

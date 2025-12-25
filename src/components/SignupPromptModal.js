@@ -18,10 +18,10 @@ export default function SignupPromptModal() {
         const showPopup = () => {
             const lastShown = localStorage.getItem('signupPopupLastShown');
             const now = Date.now();
-            const threeMinutes = 3 * 60 * 1000; // 3 minutes in milliseconds
+            const oneMinute = 1 * 60 * 1000; // 1 minute in milliseconds
 
-            // Show if never shown OR if 3 minutes have passed since last shown
-            const shouldShow = !lastShown || (now - parseInt(lastShown) > threeMinutes);
+            // Show if never shown OR if 1 minute has passed since last shown
+            const shouldShow = !lastShown || (now - parseInt(lastShown) > oneMinute);
 
             if (shouldShow) {
                 setIsOpen(true);
@@ -32,12 +32,12 @@ export default function SignupPromptModal() {
         // Show after 10 seconds initially
         const initialTimer = setTimeout(showPopup, 10000);
 
-        // Then show every 3 minutes if user hasn't signed up
+        // Then show every 1 minute if user hasn't signed up
         const recurringInterval = setInterval(() => {
             if (!user) {
                 showPopup();
             }
-        }, 3 * 60 * 1000); // Every 3 minutes
+        }, 1 * 60 * 1000); // Every 1 minute!
 
         return () => {
             clearTimeout(initialTimer);
