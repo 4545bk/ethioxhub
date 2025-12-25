@@ -71,6 +71,9 @@ export const metadata = {
   },
   verification: {
     google: 'verification_token', // You can ask user to add this later
+    other: {
+      'juicyads-site-verification': ['9a0d458b1acb2648334dcf010b29bfac'],
+    },
   },
 };
 
