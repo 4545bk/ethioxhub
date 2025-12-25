@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import CommentsSection from '@/components/CommentsSection';
-import PurchaseModal from '@/components/PurchaseModal';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useLikeVideo } from '@/hooks/useLikeVideo';
+import { optimizeCloudinaryVideoUrl } from '@/utils/videoOptimizer';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import Hls from 'hls.js';
 
@@ -172,19 +173,21 @@ export default function VideoPlayerClient() {
 
                 // Check if user has access (purchased, subscribed, free, or admin)
                 if (data.canAccess && data.video.videoUrl) {
+                    const optimizedUrl = optimizeCloudinaryVideoUrl(data.video.videoUrl);
+
                     // Allow free videos to play without login (freemium strategy)
                     if (!data.video.isPaid) {
-                        setPlaybackUrl(data.video.videoUrl);
+                        setPlaybackUrl(optimizedUrl);
                     } else if (isAuthenticated) {
                         // Paid videos require authentication
-                        setPlaybackUrl(data.video.videoUrl);
+                        setPlaybackUrl(optimizedUrl);
                     }
                 } else if (data.video.isPaid && !data.canAccess) {
                     // Show purchase modal for paid videos when user doesn't have access
                     if (!authLoading) setShowPurchaseModal(true);
                 } else if (!data.video.isPaid && data.video.videoUrl) {
                     // Free video - allow access without login
-                    setPlaybackUrl(data.video.videoUrl);
+                    setPlaybackUrl(optimizeCloudinaryVideoUrl(data.video.videoUrl));
                 }
 
                 // Store userId for comments/likes
