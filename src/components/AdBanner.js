@@ -53,10 +53,26 @@ export default function AdBanner({ zoneId, width, height, className = '' }) {
     }
 
     return (
-        <div className={`flex justify-center items-center my-4 overflow-hidden ${className}`}>
-            <div ref={adRef}></div>
-            {/* Fallback label */}
-            <div className="absolute text-[10px] text-gray-600 mt-2 -mb-4 opacity-50">Advertisement</div>
+        <div className={`flex flex-col items-center my-6 overflow-hidden ${className}`}>
+            <div className="relative">
+                {/* Ad Label */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 bg-black/80 px-2 py-0.5 rounded-full z-10 border border-gray-800">
+                    Advertisement
+                </div>
+
+                {/* Ad Container */}
+                <div ref={adRef} className="bg-gray-900/50 rounded-lg"></div>
+            </div>
+
+            {/* Upsell Button */}
+            <a
+                href="/register"
+                className="mt-2 text-[10px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors group bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20 hover:bg-orange-500/20"
+            >
+                <span>🚫 Remove Ads</span>
+                <span className="text-gray-500 group-hover:text-gray-400">•</span>
+                <span className="text-green-400">Go Premium 💎</span>
+            </a>
         </div>
     );
 }
