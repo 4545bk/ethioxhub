@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
+import { triggerSignupModal } from '@/utils/signupModalTrigger';
 
 export function useLikeVideo(initialState = {}) {
     const [liked, setLiked] = useState(initialState.liked || false);
@@ -20,7 +21,7 @@ export function useLikeVideo(initialState = {}) {
     const handleLike = async (videoId) => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            toast.info('Please login to like videos');
+            triggerSignupModal();
             return;
         }
 
@@ -90,7 +91,7 @@ export function useLikeVideo(initialState = {}) {
     const handleDislike = async (videoId) => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            toast.info('Please login to dislike videos');
+            triggerSignupModal();
             return;
         }
 

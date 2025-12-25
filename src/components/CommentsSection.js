@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CommentItem from './CommentItem';
+import { triggerSignupModal } from '@/utils/signupModalTrigger';
 
 export default function CommentsSection({ videoId }) {
     const [comments, setComments] = useState([]);
@@ -60,7 +61,7 @@ export default function CommentsSection({ videoId }) {
 
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            alert('Please login to post comments');
+            triggerSignupModal();
             return;
         }
 

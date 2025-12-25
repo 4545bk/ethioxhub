@@ -5,11 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Gift, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { setSignupModalListener } from '@/utils/signupModalTrigger';
 
 export default function SignupPromptModal() {
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
     const { user } = useAuth();
+
+    // Register this modal with the global trigger system
+    useEffect(() => {
+        setSignupModalListener(() => {
+            if (!user) {
+                setIsOpen(true);
+            }
+        });
+    }, [user]);
 
     useEffect(() => {
         // Don't show if user is logged in
