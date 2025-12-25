@@ -284,7 +284,59 @@ export async function GET(request) {
             }
         ]);
 
+        // Calculate Today vs Yesterday for Insights
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const yesterdayStart = new Date(todayStart);
+        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+        const yesterdayEnd = new Date(todayStart);
+
+        const todayViews = await AnalyticsEvent.countDocuments({
+            type: 'page_view',
+            createdAt: { $gte: todayStart }
+        });
+
+        const yesterdayViews = await AnalyticsEvent.countDocuments({
+            type: 'page_view',
+            createdAt: { $gte: yesterdayStart, $lt: yesterdayEnd }
+        });
+
+        const growthPercent = yesterdayViews > 0
+            ? Math.round(((todayViews - yesterdayViews) / yesterdayViews) * 100)
+            : 100;
+
+        // Generate Smart Insights
+        const insights = {
+            positives: [],
+            negatives: [],
+            actions: []
+        };
+
+        // Positives
+        if (growthPercent > 0) insights.positives.push(`Traffic is up ${growthPercent}% compared to yesterday!`);
+        if (returningVisitors > uniqueVisitors * 0.3) insights.positives.push('Great retention! >30% returning visitors.');
+        if (avgSessionDuration > 180) insights.positives.push('Excellent engagement (Avg session > 3 mins).');
+        if (liveVisitors > 5) insights.positives.push(`${liveVisitors} people are online right now!`);
+
+        // Negatives
+        if (growthPercent < -10) insights.negatives.push(`Traffic dropped ${Math.abs(growthPercent)}% today.`);
+        if (pagesPerSession < 2) insights.negatives.push('Users are leaving after 1 page (High Bounce).');
+        if (devices.mobile > devices.desktop * 2 && avgSessionDuration < 60) insights.negatives.push('Mobile users leaving fast. Check mobile speed.');
+
+        // Actions
+        if (sources.social < sources.direct) insights.actions.push('Share more links on Telegram to boost Social traffic.');
+        if (topCountries.length < 3) insights.actions.push('Expand reach! Post in international groups.');
+        if (topPages.length > 0 && topPages[0]._id.includes('lina-girls')) insights.actions.push('Lina Girls are trending. Add more profiles!');
+        else insights.actions.push('Try sharing specific Lina profiles to boost engagement.');
+
+        // Fallbacks
+        if (insights.positives.length === 0) insights.positives.push('System is tracking data steadily.');
+        if (insights.negatives.length === 0) insights.negatives.push('No critical issues detected today.');
+        if (insights.actions.length === 0) insights.actions.push('Keep posting consistently!');
+
         return NextResponse.json({
+            insights, // Add insights to response
             success: true,
             period: {
                 days,
@@ -308,7 +360,12 @@ export async function GET(request) {
             devices,
             sources,
             peakHours,
-            topVideos
+            topCities,
+            devices,
+            sources,
+            peakHours,
+            topVideos,
+            insights // New field
         });
 
     } catch (error) {

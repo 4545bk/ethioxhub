@@ -13,6 +13,7 @@ import VisitorsChart from '../../../components/dashboard/VisitorsChart';
 import CountriesChart from '../../../components/dashboard/CountriesChart';
 import PeakTrafficChart from '../../../components/dashboard/PeakTrafficChart';
 import ContentPerformance from '../../../components/dashboard/ContentPerformance';
+import DailyInsights from '../../../components/dashboard/DailyInsights';
 
 export default function AnalyticsPage() {
     const { user, loading: authLoading } = useAuth();
@@ -29,6 +30,7 @@ export default function AnalyticsPage() {
     const [sources, setSources] = useState({ direct: 0, google: 0, social: 0, other: 0 });
     const [peakHours, setPeakHours] = useState(Array(24).fill(0));
     const [topVideos, setTopVideos] = useState([]);
+    const [insights, setInsights] = useState(null);
     const [error, setError] = useState(null);
 
     // UI State
@@ -71,6 +73,7 @@ export default function AnalyticsPage() {
                 setSources(data.sources || { direct: 0, google: 0, social: 0, other: 0 });
                 setPeakHours(data.peakHours || Array(24).fill(0));
                 setTopVideos(data.topVideos || []);
+                setInsights(data.insights || null);
             } catch (err) {
                 console.error("Analytics Error:", err);
                 setError(err.message);
@@ -215,6 +218,9 @@ export default function AnalyticsPage() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Daily Insights */}
+                    <DailyInsights insights={insights} />
 
                     {/* Stats Overview Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
