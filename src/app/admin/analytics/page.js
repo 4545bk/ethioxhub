@@ -153,83 +153,58 @@ export default function AnalyticsPage() {
 
     // ===== MAIN UI =====
     return (
-        <div className="flex min-h-screen bg-gray-50 analytics-theme font-sans">
+        <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
             {/* AdminSidebar */}
             <AdminSidebar />
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col">
                 {/* Header */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+                <header className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
                     {/* Search Bar */}
-                    <div className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2.5 w-80">
-                        <Search className="w-4 h-4 text-gray-500" />
+                    <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-2.5 w-80 border border-gray-100">
+                        <Search className="w-4 h-4 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Search analytics..."
                             value={searchQuery}
                             onChange={handleSearch}
-                            className="bg-transparent text-sm text-gray-900 placeholder:text-gray-500 outline-none flex-1"
+                            className="bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none flex-1"
                         />
                     </div>
 
                     {/* Right Side */}
-                    <div className="flex items-center gap-4">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-                            <Bell className="w-5 h-5 text-gray-600" />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full"></span>
+                    <div className="flex items-center gap-3">
+                        <button className="p-2 hover:bg-gray-50 rounded-xl transition-colors relative">
+                            <Bell className="w-5 h-5 text-gray-500" />
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-400 rounded-full"></span>
                         </button>
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <HelpCircle className="w-5 h-5 text-gray-600" />
+                        <button className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
+                            <HelpCircle className="w-5 h-5 text-gray-500" />
                         </button>
 
                         <div className="flex items-center gap-3 ml-2 pl-4 border-l border-gray-200">
-                            <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center">
+                            <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-purple-400 rounded-xl flex items-center justify-center shadow-sm">
                                 <span className="text-white text-sm font-semibold">
                                     {getInitials(user?.username || 'Admin')}
                                 </span>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm font-semibold text-gray-900">{user?.username || 'Admin'}</p>
-                                <p className="text-xs text-blue-600">Administrator</p>
+                                <p className="text-sm font-semibold text-gray-700">{user?.username || 'Admin'}</p>
+                                <p className="text-xs text-gray-400">Administrator</p>
                             </div>
-                            <ChevronDown className="w-4 h-4 text-gray-500" />
                         </div>
                     </div>
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 p-6 overflow-y-auto">
-                    {/* Page Title & Filters */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Analytics Overview,</h1>
-                            <p className="text-sm text-gray-500 uppercase">
-                                {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - REAL-TIME
-                            </p>
-                        </div>
-
-                        {/* Filter Bar */}
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setSortBy(sortBy === 'date' ? 'value' : 'date')}
-                                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                <SlidersHorizontal className="w-4 h-4 text-gray-600" />
-                                <span className="text-sm text-gray-900">Sort By: {sortBy === 'date' ? 'Date' : 'Value'}</span>
-                            </button>
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                <Filter className="w-4 h-4 text-gray-600" />
-                                <span className="text-sm text-gray-900">Filter {showFilters ? '(Active)' : ''}</span>
-                            </button>
-                            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                <Calendar className="w-4 h-4" />
-                                <span className="text-sm font-medium">Last 7 Days</span>
-                            </button>
-                        </div>
+                <main className="flex-1 p-8 overflow-y-auto">
+                    {/* Page Title */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Analytics Overview</h1>
+                        <p className="text-sm text-gray-500">
+                            {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} • Real-time
+                        </p>
                     </div>
 
                     {/* Smart Alerts */}
@@ -245,53 +220,53 @@ export default function AnalyticsPage() {
                     <ConversionFunnel funnel={funnel} />
 
                     {/* Stats Overview Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <Eye className="w-5 h-5 text-blue-600" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+                        <div className="bg-blue-50 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-blue-100/50">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-blue-400/20 rounded-2xl flex items-center justify-center">
+                                    <Eye className="w-6 h-6 text-blue-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Total Views</p>
-                                    <p className="text-xl font-bold text-gray-900">{stats?.totalPageViews?.toLocaleString() || 0}</p>
+                                    <p className="text-xs text-blue-600/70 font-medium mb-1">Total Views</p>
+                                    <p className="text-2xl font-bold text-blue-900">{stats?.totalPageViews?.toLocaleString() || 0}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                    <Users className="w-5 h-5 text-purple-600" />
+                        <div className="bg-purple-50 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-purple-100/50">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-purple-400/20 rounded-2xl flex items-center justify-center">
+                                    <Users className="w-6 h-6 text-purple-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Unique Visitors</p>
-                                    <p className="text-xl font-bold text-gray-900">{stats?.uniqueVisitors?.toLocaleString() || 0}</p>
+                                    <p className="text-xs text-purple-600/70 font-medium mb-1">Unique Visitors</p>
+                                    <p className="text-2xl font-bold text-purple-900">{stats?.uniqueVisitors?.toLocaleString() || 0}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                    <Clock className="w-5 h-5 text-green-600" />
+                        <div className="bg-green-50 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-green-100/50">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-green-400/20 rounded-2xl flex items-center justify-center">
+                                    <Clock className="w-6 h-6 text-green-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Avg. Session</p>
-                                    <p className="text-xl font-bold text-gray-900">
+                                    <p className="text-xs text-green-600/70 font-medium mb-1">Avg. Session</p>
+                                    <p className="text-2xl font-bold text-green-900">
                                         {Math.floor((stats?.avgSessionDuration || 0) / 60)}m {(stats?.avgSessionDuration || 0) % 60}s
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                    <MousePointer className="w-5 h-5 text-orange-600" />
+                        <div className="bg-pink-50 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-pink-100/50">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-pink-400/20 rounded-2xl flex items-center justify-center">
+                                    <MousePointer className="w-6 h-6 text-pink-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Pages/Session</p>
-                                    <p className="text-xl font-bold text-gray-900">{stats?.pagesPerSession?.toFixed(1) || 0}</p>
+                                    <p className="text-xs text-pink-600/70 font-medium mb-1">Pages/Session</p>
+                                    <p className="text-2xl font-bold text-pink-900">{stats?.pagesPerSession?.toFixed(1) || 0}</p>
                                 </div>
                             </div>
                         </div>
