@@ -324,11 +324,44 @@ export async function GET(request) {
         if (pagesPerSession < 2) insights.negatives.push('Users are leaving after 1 page (High Bounce).');
         if (devices.mobile > devices.desktop * 2 && avgSessionDuration < 60) insights.negatives.push('Mobile users leaving fast. Check mobile speed.');
 
-        // Actions
-        if (sources.social < sources.direct) insights.actions.push('Share more links on Telegram to boost Social traffic.');
-        if (topCountries.length < 3) insights.actions.push('Expand reach! Post in international groups.');
-        if (topPages.length > 0 && topPages[0]._id.includes('lina-girls')) insights.actions.push('Lina Girls are trending. Add more profiles!');
-        else insights.actions.push('Try sharing specific Lina profiles to boost engagement.');
+        // Actions - Smart Strategy Generation
+
+        // 1. Calculate Peak Time
+        let maxTraffic = 0;
+        let peakHourIndex = 18; // Default to evening
+        peakHours.forEach((count, idx) => {
+            if (count > maxTraffic) {
+                maxTraffic = count;
+                peakHourIndex = idx;
+            }
+        });
+        const peakTimeStart = peakHourIndex.toString().padStart(2, '0');
+        const peakTimeEnd = ((peakHourIndex + 1) % 24).toString().padStart(2, '0');
+        insights.actions.push(`Post content during ${peakTimeStart}:00–${peakTimeEnd}:00 (Your Peak Traffic Time).`);
+
+        // 2. Region Growth Strategies
+        const hasUS = topCountries.some(c => c._id === 'US');
+        const hasAE = topCountries.some(c => c._id === 'AE'); // UAE/Dubai
+
+        if (!hasUS) insights.actions.push('Target US traffic with weekend posts (High Value Ad Market).');
+        else insights.actions.push('US traffic is present. Boost it with English content.');
+
+        if (!hasAE) insights.actions.push('Target Dubai (AE) groups. Diaspora users pay well.');
+
+        // 3. Content Optimization
+        if (pagesPerSession < 2.5) {
+            insights.actions.push('Improve landing page depth (Add "Related Videos" or "More Photos").');
+        }
+
+        // 4. Source Optimization
+        if (sources.direct > sources.social * 2) {
+            insights.actions.push('Social traffic is low. Share links in 3 new Telegram groups today.');
+        }
+
+        // 5. User Retention
+        if (returningVisitors < newVisitors * 0.2) {
+            insights.actions.push('Retention is low. Create a "Loyalty" offer or Subscriber discount.');
+        }
 
         // Fallbacks
         if (insights.positives.length === 0) insights.positives.push('System is tracking data steadily.');
