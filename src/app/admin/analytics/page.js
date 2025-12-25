@@ -14,6 +14,7 @@ import CountriesChart from '../../../components/dashboard/CountriesChart';
 import PeakTrafficChart from '../../../components/dashboard/PeakTrafficChart';
 import ContentPerformance from '../../../components/dashboard/ContentPerformance';
 import DailyInsights from '../../../components/dashboard/DailyInsights';
+import ConversionFunnel from '../../../components/dashboard/ConversionFunnel';
 
 export default function AnalyticsPage() {
     const { user, loading: authLoading } = useAuth();
@@ -28,6 +29,8 @@ export default function AnalyticsPage() {
     const [topCities, setTopCities] = useState([]);
     const [devices, setDevices] = useState({ mobile: 0, desktop: 0, tablet: 0 });
     const [sources, setSources] = useState({ direct: 0, google: 0, social: 0, other: 0 });
+    const [socialBreakdown, setSocialBreakdown] = useState(null);
+    const [funnel, setFunnel] = useState(null);
     const [peakHours, setPeakHours] = useState(Array(24).fill(0));
     const [topVideos, setTopVideos] = useState([]);
     const [insights, setInsights] = useState(null);
@@ -71,6 +74,8 @@ export default function AnalyticsPage() {
                 setTopCities(data.topCities || []);
                 setDevices(data.devices || { mobile: 0, desktop: 0, tablet: 0 });
                 setSources(data.sources || { direct: 0, google: 0, social: 0, other: 0 });
+                setSocialBreakdown(data.socialBreakdown || null);
+                setFunnel(data.funnel || null);
                 setPeakHours(data.peakHours || Array(24).fill(0));
                 setTopVideos(data.topVideos || []);
                 setInsights(data.insights || null);
@@ -221,6 +226,9 @@ export default function AnalyticsPage() {
 
                     {/* Daily Insights */}
                     <DailyInsights insights={insights} />
+
+                    {/* Conversion Funnel */}
+                    <ConversionFunnel funnel={funnel} />
 
                     {/* Stats Overview Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -375,7 +383,7 @@ export default function AnalyticsPage() {
                             />
                         </div>
                         <div className="col-span-1">
-                            <SourceOfPurchases sources={sources} />
+                            <SourceOfPurchases sources={sources} socialBreakdown={socialBreakdown} />
                         </div>
                         <div className="col-span-1">
                             <VisitorsChart

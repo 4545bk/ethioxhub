@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { trackAnalyticsEvent } from '@/components/AnalyticsTracker';
 
 export default function PurchaseModal({ isOpen, onClose, video, onSuccess }) {
     const [loading, setLoading] = useState(false);
@@ -58,6 +59,7 @@ export default function PurchaseModal({ isOpen, onClose, video, onSuccess }) {
 
         setLoading(true);
         setError(null);
+        trackAnalyticsEvent('purchase_start', `/video/${video._id}`, { price: video.price });
 
         try {
             const response = await fetch(`/api/videos/${video._id}/purchase`, {
@@ -75,6 +77,10 @@ export default function PurchaseModal({ isOpen, onClose, video, onSuccess }) {
 
             // Success
             if (onSuccess) {
+                trackAnalyticsEvent('purchase_complete', `/video/${video._id}`, {
+                    price: video.price,
+                    title: video.title
+                });
                 onSuccess(data);
             }
 

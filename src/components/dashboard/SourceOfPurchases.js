@@ -2,7 +2,7 @@ import React from 'react';
 import { MoreHorizontal, Globe } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
-const SourceOfPurchases = ({ sources }) => {
+const SourceOfPurchases = ({ sources, socialBreakdown }) => {
     // Transform sources object to array
     const total = sources.direct + sources.google + sources.social + sources.other || 1;
 
@@ -92,6 +92,27 @@ const SourceOfPurchases = ({ sources }) => {
                             </div>
                         ))}
                     </div>
+
+                    {/* Social Breakdown (New) */}
+                    {sources.social > 0 && socialBreakdown && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <p className="text-xs font-semibold text-gray-500 mb-2 uppercase">Social Breakdown</p>
+                            <div className="space-y-1">
+                                {Object.entries(socialBreakdown).map(([platform, count]) => (
+                                    count > 0 && (
+                                        <div key={platform} className="flex justify-between text-xs">
+                                            <span className="capitalize text-gray-600">
+                                                {platform === 'telegram' ? '✈️ Telegram' :
+                                                    platform === 'facebook' ? '📘 Facebook' :
+                                                        platform === 'instagram' ? '📸 Instagram' : platform}
+                                            </span>
+                                            <span className="font-medium text-gray-900">{count}</span>
+                                        </div>
+                                    )
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </>
             ) : (
                 <div className="h-48 flex items-center justify-center text-gray-400">

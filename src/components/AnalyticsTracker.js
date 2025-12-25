@@ -78,11 +78,13 @@ export default function AnalyticsTracker() {
     return null; // This component doesn't render anything
 }
 
-// Helper function to track events
-async function trackEvent(type, page, metadata = {}) {
+// Helper function to track events (Exported)
+export async function trackAnalyticsEvent(type, page, metadata = {}) {
     try {
         const sessionId = getSessionId();
         const { visitorId, isNewVisitor } = getVisitorInfo();
+
+        if (typeof window === 'undefined') return;
 
         await fetch('/api/analytics/track', {
             method: 'POST',
@@ -103,3 +105,6 @@ async function trackEvent(type, page, metadata = {}) {
         console.debug('Analytics tracking failed:', error);
     }
 }
+
+// Internal alias
+const trackEvent = trackAnalyticsEvent;

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
+import { trackAnalyticsEvent } from '@/components/AnalyticsTracker';
 
 export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +38,7 @@ export default function RegisterPage() {
         try {
             const referralCode = localStorage.getItem('referralCode');
             await register(username, email, password, referralCode);
+            trackAnalyticsEvent('signup_complete', '/register', { username, email });
             router.push('/');
         } catch (err) {
             setError(err.message);

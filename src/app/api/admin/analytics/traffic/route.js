@@ -122,17 +122,42 @@ export async function GET(request) {
         ]);
 
         const sources = { direct: 0, google: 0, social: 0, other: 0 };
+        const socialBreakdown = { telegram: 0, facebook: 0, instagram: 0, tiktok: 0, youtube: 0 };
+
         trafficSources.forEach(session => {
             const ref = (session.referrer || '').toLowerCase();
             if (ref === 'direct' || !ref) {
                 sources.direct++;
             } else if (ref.includes('google')) {
                 sources.google++;
-            } else if (ref.includes('facebook') || ref.includes('twitter') || ref.includes('instagram') || ref.includes('linkedin')) {
+            } else if (ref.includes('facebook') || ref.includes('twitter') || ref.includes('instagram') || ref.includes('linkedin') || ref.includes('t.me') || ref.includes('tiktok') || ref.includes('youtube')) {
                 sources.social++;
+
+                // Detailed breakdown
+                if (ref.includes('t.me') || ref.includes('telegram')) socialBreakdown.telegram++;
+                if (ref.includes('facebook') || ref.includes('fb.com')) socialBreakdown.facebook++;
+                if (ref.includes('instagram')) socialBreakdown.instagram++;
+                if (ref.includes('tiktok')) socialBreakdown.tiktok++;
+                if (ref.includes('youtube')) socialBreakdown.youtube++;
             } else {
                 sources.other++;
             }
+        });
+
+        // Conversion Funnel Metrics
+        const signups = await AnalyticsEvent.countDocuments({
+            type: 'signup_complete',
+            createdAt: { $gte: startDate }
+        });
+
+        const purchaseStarts = await AnalyticsEvent.countDocuments({
+            type: 'purchase_start',
+            createdAt: { $gte: startDate }
+        });
+
+        const purchases = await AnalyticsEvent.countDocuments({
+            type: 'purchase_complete',
+            createdAt: { $gte: startDate }
         });
 
         // Get peak traffic hours (0-23)
@@ -386,16 +411,19 @@ export async function GET(request) {
                 pagesPerSession,
                 liveVisitors: liveVisitors.length
             },
+            funnel: {
+                visitors: uniqueVisitors.length,
+                signups,
+                purchaseStarts,
+                purchases
+            },
             chartData,
             topPages,
             topCountries,
             topCities,
             devices,
             sources,
-            peakHours,
-            topCities,
-            devices,
-            sources,
+            socialBreakdown,
             peakHours,
             topVideos,
             insights // New field
