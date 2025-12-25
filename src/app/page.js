@@ -9,12 +9,14 @@ import { useFilterVideos } from '../hooks/useFilterVideos';
 import { useLanguage } from '../contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import CookieBanner from '../components/CookieBanner';
+import AdBanner from '../components/AdBanner'; // Import AdBanner
 
 function HomePageContent() {
     const { t } = useLanguage();
     const searchParams = useSearchParams();
     const searchQuery = searchParams.get('search');
     const [hasLoaded, setHasLoaded] = useState(false);
+
 
     // Initialize with search query if present
     const {
@@ -177,9 +179,20 @@ function HomePageContent() {
                         </div>
                     ) : videos.length > 0 ? (
                         <>
+                            {/* Top Mobile/Desktop Header Ad (300x100) */}
+                            <AdBanner zoneId="1107897" width={300} height={100} className="mb-6" />
+
                             <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
-                                {videos.map((video) => (
-                                    <VideoCardWithPreview key={video._id} video={video} />
+                                {videos.map((video, index) => (
+                                    <>
+                                        <VideoCardWithPreview key={video._id} video={video} />
+                                        {/* Insert Ad after every 8th video (2 rows on desktop) */}
+                                        {(index + 1) === 8 && (
+                                            <div className="col-span-full flex justify-center py-4">
+                                                <AdBanner zoneId="1107896" width={300} height={250} />
+                                            </div>
+                                        )}
+                                    </>
                                 ))}
                             </section>
 
@@ -216,6 +229,9 @@ function HomePageContent() {
                                     </button>
                                 </div>
                             )}
+
+                            {/* Bottom Square Ad (300x250) */}
+                            <AdBanner zoneId="1107896" width={300} height={250} className="mt-8" />
                         </>
                     ) : hasLoaded ? (
                         <div className="text-center py-20">
