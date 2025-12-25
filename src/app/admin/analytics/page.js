@@ -219,56 +219,28 @@ export default function AnalyticsPage() {
                     {/* Conversion Funnel */}
                     <ConversionFunnel funnel={funnel} />
 
-                    {/* Stats Overview Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
-                        <div className="bg-blue-50 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-blue-100/50">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-blue-400/20 rounded-2xl flex items-center justify-center">
-                                    <Eye className="w-6 h-6 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-blue-600/70 font-medium mb-1">Total Views</p>
-                                    <p className="text-2xl font-bold text-blue-900">{stats?.totalPageViews?.toLocaleString() || 0}</p>
-                                </div>
-                            </div>
+                    {/* Stats Overview Cards - Compact Horizontal */}
+                    <div className="grid grid-cols-4 gap-3 mb-6">
+                        <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100/50">
+                            <p className="text-[10px] text-blue-600/70 font-medium mb-1">Total Views</p>
+                            <p className="text-xl font-bold text-blue-900">{stats?.totalPageViews?.toLocaleString() || 0}</p>
                         </div>
 
-                        <div className="bg-purple-50 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-purple-100/50">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-purple-400/20 rounded-2xl flex items-center justify-center">
-                                    <Users className="w-6 h-6 text-purple-600" />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-purple-600/70 font-medium mb-1">Unique Visitors</p>
-                                    <p className="text-2xl font-bold text-purple-900">{stats?.uniqueVisitors?.toLocaleString() || 0}</p>
-                                </div>
-                            </div>
+                        <div className="bg-purple-50 p-3 rounded-2xl border border-purple-100/50">
+                            <p className="text-[10px] text-purple-600/70 font-medium mb-1">Unique Visitors</p>
+                            <p className="text-xl font-bold text-purple-900">{stats?.uniqueVisitors?.toLocaleString() || 0}</p>
                         </div>
 
-                        <div className="bg-green-50 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-green-100/50">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-green-400/20 rounded-2xl flex items-center justify-center">
-                                    <Clock className="w-6 h-6 text-green-600" />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-green-600/70 font-medium mb-1">Avg. Session</p>
-                                    <p className="text-2xl font-bold text-green-900">
-                                        {Math.floor((stats?.avgSessionDuration || 0) / 60)}m {(stats?.avgSessionDuration || 0) % 60}s
-                                    </p>
-                                </div>
-                            </div>
+                        <div className="bg-green-50 p-3 rounded-2xl border border-green-100/50">
+                            <p className="text-[10px] text-green-600/70 font-medium mb-1">Avg. Session</p>
+                            <p className="text-xl font-bold text-green-900">
+                                {Math.floor((stats?.avgSessionDuration || 0) / 60)}m {(stats?.avgSessionDuration || 0) % 60}s
+                            </p>
                         </div>
 
-                        <div className="bg-pink-50 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-pink-100/50">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-pink-400/20 rounded-2xl flex items-center justify-center">
-                                    <MousePointer className="w-6 h-6 text-pink-600" />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-pink-600/70 font-medium mb-1">Pages/Session</p>
-                                    <p className="text-2xl font-bold text-pink-900">{stats?.pagesPerSession?.toFixed(1) || 0}</p>
-                                </div>
-                            </div>
+                        <div className="bg-pink-50 p-3 rounded-2xl border border-pink-100/50">
+                            <p className="text-[10px] text-pink-600/70 font-medium mb-1">Pages/Session</p>
+                            <p className="text-xl font-bold text-pink-900">{stats?.pagesPerSession?.toFixed(1) || 0}</p>
                         </div>
                     </div>
 
