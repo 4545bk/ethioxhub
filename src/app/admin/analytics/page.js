@@ -15,6 +15,8 @@ import PeakTrafficChart from '../../../components/dashboard/PeakTrafficChart';
 import ContentPerformance from '../../../components/dashboard/ContentPerformance';
 import DailyInsights from '../../../components/dashboard/DailyInsights';
 import ConversionFunnel from '../../../components/dashboard/ConversionFunnel';
+import SmartAlerts from '../../../components/dashboard/SmartAlerts';
+import WeeklyReport from '../../../components/dashboard/WeeklyReport';
 
 export default function AnalyticsPage() {
     const { user, loading: authLoading } = useAuth();
@@ -34,6 +36,9 @@ export default function AnalyticsPage() {
     const [peakHours, setPeakHours] = useState(Array(24).fill(0));
     const [topVideos, setTopVideos] = useState([]);
     const [insights, setInsights] = useState(null);
+    const [alerts, setAlerts] = useState([]);
+    const [weeklyReport, setWeeklyReport] = useState(null);
+    const [bounceRateByPage, setBounceRateByPage] = useState([]);
     const [error, setError] = useState(null);
 
     // UI State
@@ -79,6 +84,9 @@ export default function AnalyticsPage() {
                 setPeakHours(data.peakHours || Array(24).fill(0));
                 setTopVideos(data.topVideos || []);
                 setInsights(data.insights || null);
+                setAlerts(data.alerts || []);
+                setWeeklyReport(data.weeklyReport || null);
+                setBounceRateByPage(data.bounceRateByPage || []);
             } catch (err) {
                 console.error("Analytics Error:", err);
                 setError(err.message);
@@ -223,6 +231,12 @@ export default function AnalyticsPage() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Smart Alerts */}
+                    <SmartAlerts alerts={alerts} />
+
+                    {/* Weekly Report */}
+                    <WeeklyReport report={weeklyReport} />
 
                     {/* Daily Insights */}
                     <DailyInsights insights={insights} />

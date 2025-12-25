@@ -48,13 +48,37 @@ export default function AnalyticsTracker() {
         // Reset start time for new page
         startTimeRef.current = Date.now();
         lastPathRef.current = pathname;
+        let maxScrollDepth = 0;
 
         // Track page view
         trackEvent('page_view', pathname);
 
+        // Scroll depth tracking
+        const updateScrollDepth = () => {
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollPercentage = Math.round((scrollTop / (documentHeight - windowHeight)) * 100);
+
+            if (scrollPercentage > maxScrollDepth && scrollPercentage <= 100) {
+                maxScrollDepth = scrollPercentage;
+            }
+        };
+
+        window.addEventListener('scroll', updateScrollDepth, { passive: true });
+        updateScrollDepth(); // Initial check
+
         // Cleanup: track session end when user leaves
         const handleBeforeUnload = () => {
             const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
+
+            // Track scroll depth achieved
+            if (maxScrollDepth > 0) {
+                trackEvent('scroll_depth', lastPathRef.current, {
+                    depth: maxScrollDepth,
+                    duration
+                });
+            }
 
             // Use sendBeacon for reliable tracking even when page is closing
             const data = {
@@ -62,7 +86,10 @@ export default function AnalyticsTracker() {
                 page: lastPathRef.current,
                 sessionId,
                 userId: user?.id || null,
-                metadata: { duration }
+                metadata: {
+                    duration,
+                    scrollDepth: maxScrollDepth
+                }
             };
 
             navigator.sendBeacon?.('/api/analytics/track', JSON.stringify(data));
@@ -71,6 +98,7 @@ export default function AnalyticsTracker() {
         window.addEventListener('beforeunload', handleBeforeUnload);
 
         return () => {
+            window.removeEventListener('scroll', updateScrollDepth);
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
     }, [pathname, user]);

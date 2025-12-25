@@ -393,6 +393,152 @@ export async function GET(request) {
         if (insights.negatives.length === 0) insights.negatives.push('No critical issues detected today.');
         if (insights.actions.length === 0) insights.actions.push('Keep posting consistently!');
 
+        // === WEEKLY GROWTH REPORT ===
+        const lastWeekStart = new Date();
+        lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+        const previousWeekStart = new Date(lastWeekStart);
+        previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+
+        const thisWeekViews = await AnalyticsEvent.countDocuments({
+            type: 'page_view',
+            createdAt: { $gte: lastWeekStart }
+        });
+
+        const lastWeekViews = await AnalyticsEvent.countDocuments({
+            type: 'page_view',
+            createdAt: { $gte: previousWeekStart, $lt: lastWeekStart }
+        });
+
+        const weeklyGrowth = lastWeekViews > 0
+            ? Math.round(((thisWeekViews - lastWeekViews) / lastWeekViews) * 100)
+            : 100;
+
+        const weeklyReport = {
+            growth: weeklyGrowth,
+            thisWeek: thisWeekViews,
+            lastWeek: lastWeekViews,
+            summary: '',
+            bestContent: '',
+            topLoss: ''
+        };
+
+        // Generate summary
+        if (weeklyGrowth > 10) {
+            weeklyReport.summary = `🚀 You grew ${weeklyGrowth}% this week! Traffic is exploding.`;
+        } else if (weeklyGrowth > 0) {
+            weeklyReport.summary = `📈 Steady growth of ${weeklyGrowth}% this week. Keep it up!`;
+        } else if (weeklyGrowth < -10) {
+            weeklyReport.summary = `📉 Traffic dropped ${Math.abs(weeklyGrowth)}% this week. Action needed.`;
+        } else {
+            weeklyReport.summary = `📊 Traffic is stable (${weeklyGrowth >= 0 ? '+' : ''}${weeklyGrowth}%).`;
+        }
+
+        // Best content
+        if (topPages.length > 0) {
+            weeklyReport.bestContent = `Top page: ${topPages[0]._id} (${topPages[0].views} views)`;
+        }
+
+        // === SMART ALERTS ===
+        const alerts = [];
+
+        // Traffic drop alert
+        if (growthPercent < -20) {
+            alerts.push({
+                type: 'danger',
+                title: '🚨 Traffic Crash',
+                message: `Traffic is down ${Math.abs(growthPercent)}% today vs yesterday`,
+                action: 'Post urgent content NOW'
+            });
+        } else if (growthPercent < -10) {
+            alerts.push({
+                type: 'warning',
+                title: '⚠️ Traffic Declining',
+                message: `${Math.abs(growthPercent)}% drop today`,
+                action: 'Share links in 3+ groups'
+            });
+        }
+
+        // Viral moment alert
+        if (growthPercent > 100) {
+            alerts.push({
+                type: 'success',
+                title: '🔥 VIRAL MOMENT',
+                message: `Traffic spiked ${growthPercent}% today!`,
+                action: 'Capitalize: Post more similar content'
+            });
+        } else if (growthPercent > 50) {
+            alerts.push({
+                type: 'success',
+                title: '🎉 Traffic Surge',
+                message: `+${growthPercent}% today`,
+                action: 'Keep momentum going'
+            });
+        }
+
+        // Engagement collapse
+        if (avgSessionDuration < 30 && totalPageViews > 50) {
+            alerts.push({
+                type: 'warning',
+                title: '⏱️ Low Engagement',
+                message: 'Users leaving in <30 seconds',
+                action: 'Check mobile page speed'
+            });
+        }
+
+        // Conversion drop
+        if (funnel && funnel.visitors > 100 && (funnel.signups / funnel.visitors) < 0.01) {
+            alerts.push({
+                type: 'danger',
+                title: '💸 Signup Crisis',
+                message: '<1% signup rate',
+                action: 'Simplify registration process'
+            });
+        }
+
+        // === BOUNCE RATE & EXIT PAGES ===
+        const bounceRateByPage = await AnalyticsEvent.aggregate([
+            {
+                $match: {
+                    type: 'session_end',
+                    createdAt: { $gte: startDate }
+                }
+            },
+            {
+                $group: {
+                    _id: '$page',
+                    totalSessions: { $sum: 1 },
+                    bounces: {
+                        $sum: {
+                            $cond: [
+                                {
+                                    $and: [
+                                        { $lte: ['$metadata.duration', 10] },
+                                        { $lte: ['$metadata.scrollDepth', 25] }
+                                    ]
+                                },
+                                1,
+                                0
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    page: '$_id',
+                    bounceRate: {
+                        $multiply: [
+                            { $divide: ['$bounces', '$totalSessions'] },
+                            100
+                        ]
+                    },
+                    sessions: '$totalSessions'
+                }
+            },
+            { $sort: { bounceRate: -1 } },
+            { $limit: 10 }
+        ]);
+
         return NextResponse.json({
             insights, // Add insights to response
             success: true,
@@ -426,7 +572,10 @@ export async function GET(request) {
             socialBreakdown,
             peakHours,
             topVideos,
-            insights // New field
+            insights,
+            alerts,
+            weeklyReport,
+            bounceRateByPage
         });
 
     } catch (error) {
