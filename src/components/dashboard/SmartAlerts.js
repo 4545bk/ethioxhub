@@ -39,7 +39,7 @@ export default function SmartAlerts({ alerts }) {
     };
 
     return (
-        <div className="mb-6">
+        <div className="mb-4">
             <AnimatePresence mode="popLayout">
                 {alerts.map((alert, idx) => {
                     const style = getAlertStyle(alert.type);
@@ -50,23 +50,23 @@ export default function SmartAlerts({ alerts }) {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ delay: idx * 0.1 }}
-                            className={`${style.bg} border ${style.border} rounded-xl p-4 mb-3 backdrop-blur-sm`}
+                            className={`${style.bg} border ${style.border} rounded-2xl p-3 mb-2 backdrop-blur-sm`}
                         >
-                            <div className="flex items-start gap-3">
-                                <span className="text-2xl">{style.icon}</span>
+                            <div className="flex items-start gap-2">
+                                <span className="text-lg">{style.icon}</span>
                                 <div className="flex-1">
-                                    <h4 className={`font-bold ${style.text} mb-1`}>
+                                    <h4 className={`font-bold ${style.text} mb-0.5 text-sm`}>
                                         {alert.title}
                                     </h4>
-                                    <p className="text-sm text-gray-300 mb-2">
+                                    <p className="text-xs text-gray-300">
                                         {alert.message}
                                     </p>
                                     {alert.action && (
-                                        <div className="flex items-center gap-2 mt-3">
-                                            <span className="text-xs font-semibold text-gray-400 uppercase">
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] font-semibold text-gray-400 uppercase">
                                                 Action:
                                             </span>
-                                            <span className={`text-sm font-medium ${style.text}`}>
+                                            <span className={`text-xs font-medium ${style.text}`}>
                                                 {alert.action}
                                             </span>
                                         </div>

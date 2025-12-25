@@ -200,9 +200,9 @@ export default function AnalyticsPage() {
                 {/* Main Content */}
                 <main className="flex-1 p-8 overflow-y-auto">
                     {/* Page Title */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Analytics Overview</h1>
-                        <p className="text-sm text-gray-500">
+                    <div className="mb-6">
+                        <h1 className="text-2xl font-bold text-gray-800 mb-1">Analytics Overview</h1>
+                        <p className="text-xs text-gray-500">
                             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} • Real-time
                         </p>
                     </div>
