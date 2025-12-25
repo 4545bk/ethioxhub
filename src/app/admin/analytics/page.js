@@ -315,42 +315,52 @@ export default function AnalyticsPage() {
                     {/* Device & Location Row */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                <Smartphone className="w-4 h-4" />
+                            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <Smartphone className="w-4 h-4 text-blue-600" />
                                 Device Breakdown
                             </h3>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">📱 Mobile</span>
-                                    <span className="font-semibold">{devices.mobile}</span>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                    <span className="text-sm text-gray-700 font-medium">📱 Mobile</span>
+                                    <span className="font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg text-sm">{devices.mobile.toLocaleString()}</span>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">💻 Desktop</span>
-                                    <span className="font-semibold">{devices.desktop}</span>
+                                <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                    <span className="text-sm text-gray-700 font-medium">💻 Desktop</span>
+                                    <span className="font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-lg text-sm">{devices.desktop.toLocaleString()}</span>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">📱 Tablet</span>
-                                    <span className="font-semibold">{devices.tablet}</span>
+                                <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                    <span className="text-sm text-gray-700 font-medium">📱 Tablet</span>
+                                    <span className="font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-lg text-sm">{devices.tablet.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                <Globe className="w-4 h-4" />
+                            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <Globe className="w-4 h-4 text-green-600" />
                                 Top Locations
                             </h3>
                             {topCountries.length > 0 ? (
-                                <div className="space-y-2">
-                                    {topCountries.slice(0, 3).map((country, idx) => (
-                                        <div key={idx} className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600">🌍 {country._id}</span>
-                                            <span className="font-semibold">{country.visitors}</span>
+                                <div className="space-y-3">
+                                    {topCountries.slice(0, 5).map((country, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                            <span className="text-sm text-gray-700 font-medium flex items-center gap-2">
+                                                <span className="text-base">
+                                                    {country._id === 'US' ? '🇺🇸' :
+                                                        country._id === 'ET' ? '🇪🇹' :
+                                                            country._id === 'AE' ? '🇦🇪' :
+                                                                country._id === 'GB' ? '🇬🇧' : '🌍'}
+                                                </span>
+                                                {country._id}
+                                            </span>
+                                            <span className="font-bold text-green-700 bg-green-50 px-3 py-1 rounded-lg text-sm">
+                                                {country.visitors.toLocaleString()}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-sm text-gray-400">No location data yet</p>
+                                <p className="text-sm text-gray-400 p-2">No location data yet</p>
                             )}
                         </div>
                     </div>
