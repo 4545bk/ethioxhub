@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLikeVideo } from '@/hooks/useLikeVideo';
 import { optimizeCloudinaryVideoUrl } from '@/utils/videoOptimizer';
+import CommentsSection from '@/components/CommentsSection';
+import PurchaseModal from '@/components/PurchaseModal';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import Hls from 'hls.js';
 

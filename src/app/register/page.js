@@ -28,8 +28,8 @@ export default function RegisterPage() {
             return;
         }
 
-        if (password.length < 8) {
-            setError('Password must be at least 8 characters');
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters');
             return;
         }
 
@@ -145,7 +145,7 @@ export default function RegisterPage() {
                                     )}
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-500">Must be at least 8 characters</p>
+                            <p className="text-xs text-gray-500">Must be at least 6 characters</p>
                         </div>
 
                         {/* Confirm Password */}
