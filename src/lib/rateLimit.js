@@ -12,8 +12,8 @@ const RATE_LIMIT_CONFIG = {
     'upload/sign': { maxRequests: 10, windowMs: 60 * 1000 }, // 10 per minute
     'deposits/create': { maxRequests: 5, windowMs: 60 * 60 * 1000 }, // 5 per hour
     'videos/create': { maxRequests: 10, windowMs: 24 * 60 * 60 * 1000 }, // 10 per day
-    'auth/register': { maxRequests: 3, windowMs: 60 * 60 * 1000 }, // 3 per hour
-    'auth/login': { maxRequests: 5, windowMs: 15 * 60 * 1000 }, // 5 per 15 min
+    'auth/register': { maxRequests: 50, windowMs: 60 * 60 * 1000 }, // 50 per hour (increased for launch)
+    'auth/login': { maxRequests: 20, windowMs: 15 * 60 * 1000 }, // 20 per 15 min
     default: { maxRequests: 100, windowMs: 15 * 60 * 1000 }, // 100 per 15 min
 };
 

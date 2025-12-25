@@ -145,12 +145,24 @@ export async function POST(request) {
             email: sanitizedEmail,
             passwordHash,
             verifiedAge: verifiedAge || false,
-            referredBy: referrerId, // Link new user to referrer
+            balance: 10000, // 100 ETB Signup Bonus! 🎁
+            referredBy: referrerId,
             metadata: {
                 ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
                 userAgent: request.headers.get('user-agent'),
                 registeredAt: new Date(),
             },
+        });
+
+        // Create Transaction for Signup Bonus
+        await Transaction.create({
+            userId: user._id,
+            amount: 10000,
+            type: 'deposit', // Treated as a deposit/bonus
+            status: 'approved',
+            metadata: {
+                notes: 'Welcome Bonus: 100 ETB Free'
+            }
         });
 
         // Generate tokens
