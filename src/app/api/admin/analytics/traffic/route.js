@@ -486,7 +486,8 @@ export async function GET(request) {
         }
 
         // Conversion drop
-        if (funnel && funnel.visitors > 100 && (funnel.signups / funnel.visitors) < 0.01) {
+        const signupRate = uniqueVisitors.length > 100 ? (signups / uniqueVisitors.length) : 0;
+        if (uniqueVisitors.length > 100 && signupRate < 0.01) {
             alerts.push({
                 type: 'danger',
                 title: '💸 Signup Crisis',
