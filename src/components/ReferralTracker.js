@@ -11,6 +11,12 @@ export default function ReferralTracker() {
         if (ref) {
             localStorage.setItem('referralCode', ref);
         }
+
+        // Track social share links (for share rewards)
+        const share = searchParams.get('share');
+        if (share) {
+            localStorage.setItem('shareCode', share);
+        }
     }, [searchParams]);
 
     return null;

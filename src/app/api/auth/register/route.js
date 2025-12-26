@@ -72,7 +72,7 @@ export async function POST(request) {
             );
         }
 
-        const { username, email, password, verifiedAge, referralCode } = validation.data;
+        const { username, email, password, verifiedAge, referralCode, shareCode } = validation.data;
 
         // Connect to database
         await connectDB();
@@ -164,6 +164,81 @@ export async function POST(request) {
                 notes: 'Welcome Bonus: 100 ETB Free'
             }
         });
+
+        // Handle Social Share Rewards
+        if (shareCode) {
+            try {
+                const sharer = await User.findById(shareCode);
+                if (sharer && sharer._id.toString() !== user._id.toString()) {
+                    // Check if daily limit reached
+                    const now = new Date();
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                    // Reset counter if it's a new day
+                    if (sharer.lastShareRewardReset) {
+                        const lastReset = new Date(sharer.lastShareRewardReset);
+                        const lastResetDay = new Date(
+                            lastReset.getFullYear(),
+                            lastReset.getMonth(),
+                            lastReset.getDate()
+                        );
+
+                        if (lastResetDay.getTime() !== today.getTime()) {
+                            // New day, reset counter
+                            sharer.shareRewardsCount = 0;
+                            sharer.lastShareRewardReset = now;
+                        }
+                    } else {
+                        // First time, initialize
+                        sharer.shareRewardsCount = 0;
+                        sharer.lastShareRewardReset = now;
+                    }
+
+                    // Check daily limit (max 5 signups = 15 ETB)
+                    const DAILY_SHARE_LIMIT = 5;
+                    const SHARE_REWARD = 300; // 3 ETB in cents
+
+                    if (sharer.shareRewardsCount < DAILY_SHARE_LIMIT) {
+                        // Award the reward
+                        sharer.balance += SHARE_REWARD;
+                        sharer.totalShareRewards += SHARE_REWARD;
+                        sharer.shareRewardsCount += 1;
+
+                        // Add notification
+                        if (!sharer.notifications) sharer.notifications = [];
+                        sharer.notifications.push({
+                            type: 'success',
+                            message: `🎉 Someone signed up from your share! You earned 3.00 ETB. (${sharer.shareRewardsCount}/${DAILY_SHARE_LIMIT} today)`,
+                            link: '/',
+                            read: false,
+                            createdAt: now
+                        });
+
+                        await sharer.save();
+
+                        // Create transaction record
+                        await Transaction.create({
+                            userId: sharer._id,
+                            amount: SHARE_REWARD,
+                            type: 'referral_bonus',
+                            status: 'approved',
+                            metadata: {
+                                notes: `Share Reward - ${username} signed up via share link`,
+                                newUserId: user._id.toString(),
+                                dailyCount: sharer.shareRewardsCount,
+                            }
+                        });
+
+                        console.log(`Share reward awarded: ${sharer.username} earned 3 ETB from ${username} signup`);
+                    } else {
+                        console.log(`Share reward limit reached for ${sharer.username} today`);
+                    }
+                }
+            } catch (shareErr) {
+                console.warn('Share reward processing failed:', shareErr);
+                // Continue registration even if share reward fails
+            }
+        }
 
         // Generate tokens
         const accessToken = generateAccessToken(user._id.toString(), user.roles);

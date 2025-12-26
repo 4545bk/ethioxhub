@@ -129,6 +129,21 @@ const UserSchema = new mongoose.Schema(
             default: 0,
             // Total ETB earned from login bonuses (in cents)
         },
+        // Social Share Rewards System
+        shareRewardsCount: {
+            type: Number,
+            default: 0,
+            // Number of successful referrals via shares today
+        },
+        lastShareRewardReset: {
+            type: Date,
+            // Last date the daily share counter was reset
+        },
+        totalShareRewards: {
+            type: Number,
+            default: 0,
+            // Total ETB earned from share rewards (in cents)
+        },
         // Polar.sh Integration (optional)
         polarCustomerId: {
             type: String,

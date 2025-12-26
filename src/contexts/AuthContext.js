@@ -75,11 +75,11 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const register = async (username, email, password, referralCode) => {
+    const register = async (username, email, password, referralCode, shareCode) => {
         const res = await fetch('/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password, verifiedAge: true, referralCode }),
+            body: JSON.stringify({ username, email, password, verifiedAge: true, referralCode, shareCode }),
         });
 
         if (!res.ok) {

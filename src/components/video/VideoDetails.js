@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 const VideoDetails = ({ video, userLiked, userDisliked }) => {
     const { user } = useAuth();
-    const [shareText, setShareText] = useState('Share');
+    const [shareText, setShareText] = useState('Share to Telegram');
 
     // ... (existing logic)
 
@@ -26,32 +26,43 @@ const VideoDetails = ({ video, userLiked, userDisliked }) => {
     const handleShare = async () => {
         const urlObj = new URL(window.location.href);
         if (user?._id) {
-            urlObj.searchParams.set('ref', user._id);
+            // Use 'share' parameter for social share rewards
+            urlObj.searchParams.set('share', user._id);
         }
         const shareUrl = urlObj.toString();
+
+        // Create Telegram share link
+        const telegramText = encodeURIComponent(`🎬 ${video.title}\n\nWatch on EthioxHub 👇`);
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${telegramText}`;
+
         const shareData = {
             title: video.title,
-            text: `Check out "${video.title}" on EthioxHub!`,
+            text: `🎬 ${video.title} - Watch on EthioxHub!`,
             url: shareUrl,
         };
 
         try {
-            // Try Web Share API (works on mobile and some desktop browsers)
-            if (navigator.share) {
+            // On mobile with Telegram app, prefer opening Telegram directly
+            if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                window.open(telegramShareUrl, '_blank');
+                setShareText('Shared!');
+                setTimeout(() => setShareText('Share to Telegram'), 2000);
+            } else if (navigator.share) {
+                // Desktop Web Share API
                 await navigator.share(shareData);
             } else {
                 // Fallback: Copy to clipboard
                 await navigator.clipboard.writeText(shareUrl);
-                setShareText('Copied!');
-                setTimeout(() => setShareText('Share'), 2000);
+                setShareText('Link Copied!');
+                setTimeout(() => setShareText('Share to Telegram'), 2000);
             }
         } catch (err) {
             // If user cancels or error, show fallback
             if (err.name !== 'AbortError') {
                 try {
                     await navigator.clipboard.writeText(shareUrl);
-                    setShareText('Copied!');
-                    setTimeout(() => setShareText('Share'), 2000);
+                    setShareText('  Copied!');
+                    setTimeout(() => setShareText('Share to Telegram'), 2000);
                 } catch (clipboardErr) {
                     console.error('Share failed:', clipboardErr);
                 }

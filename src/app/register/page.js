@@ -37,7 +37,8 @@ export default function RegisterPage() {
 
         try {
             const referralCode = localStorage.getItem('referralCode');
-            await register(username, email, password, referralCode);
+            const shareCode = localStorage.getItem('shareCode'); // For social share rewards
+            await register(username, email, password, referralCode, shareCode);
             trackAnalyticsEvent('signup_complete', '/register', { username, email });
             router.push('/');
         } catch (err) {

@@ -17,6 +17,7 @@ export const registerSchema = z.object({
         .min(6, 'Password must be at least 6 characters'),
     verifiedAge: z.boolean().optional(),
     referralCode: z.string().optional(),
+    shareCode: z.string().optional(), // For social share rewards
 });
 
 export const loginSchema = z.object({
