@@ -119,6 +119,16 @@ export async function POST(request) {
         // Update last login timestamp too
         user.lastLogin = now;
 
+        // Add notification to user's notification bell
+        if (!user.notifications) user.notifications = [];
+        user.notifications.push({
+            type: 'success',
+            message: `🎁 Day ${user.loginStreak}! You earned ${(reward / 100).toFixed(2)} ETB from your daily login bonus.`,
+            link: '/',
+            read: false,
+            createdAt: now
+        });
+
         await user.save();
 
         // Create transaction record
