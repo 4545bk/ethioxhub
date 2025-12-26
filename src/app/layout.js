@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import ReferralTracker from '@/components/ReferralTracker';
 import AnalyticsTracker from '@/components/AnalyticsTracker';
 import SignupPromptModal from '@/components/SignupPromptModal';
+import DailyLoginModal from '@/components/DailyLoginModal';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
@@ -89,6 +90,7 @@ export default function RootLayout({ children }) {
                   <ReferralTracker />
                   <AnalyticsTracker />
                   <SignupPromptModal />
+                  <DailyLoginModal />
                 </Suspense>
 
                 {/* JSON-LD Structured Data */}

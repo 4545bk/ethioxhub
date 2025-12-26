@@ -114,6 +114,21 @@ const UserSchema = new mongoose.Schema(
             type: Number,
             default: 0, // in cents
         },
+        // Daily Login Bonus System
+        loginStreak: {
+            type: Number,
+            default: 0,
+            // Consecutive days user has logged in
+        },
+        lastLoginRewardDate: {
+            type: Date,
+            // Last date user claimed daily login reward
+        },
+        totalLoginRewards: {
+            type: Number,
+            default: 0,
+            // Total ETB earned from login bonuses (in cents)
+        },
         // Polar.sh Integration (optional)
         polarCustomerId: {
             type: String,
