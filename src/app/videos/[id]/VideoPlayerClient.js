@@ -39,6 +39,62 @@ export default function VideoPlayerClient() {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
+    const [wasPiPActive, setWasPiPActive] = useState(false); // Track if PiP was active before navigation
+    const previousVideoIdRef = useRef(null); // Track previous video ID
+
+    // Smart PiP Switching: Auto-switch to new video when navigating while in PiP mode
+    useEffect(() => {
+        const checkAndSwitchPiP = async () => {
+            // Check if we're switching to a different video
+            const currentVideoId = params.id;
+            const previousVideoId = previousVideoIdRef.current;
+
+            if (previousVideoId && previousVideoId !== currentVideoId) {
+                // Video changed! Check if we were in PiP mode
+                if (document.pictureInPictureElement) {
+                    console.log('🔄 Switching PiP from old video to new video...');
+                    setWasPiPActive(true);
+
+                    // Exit PiP from old video
+                    try {
+                        await document.exitPictureInPicture();
+                    } catch (err) {
+                        console.log('PiP exit error (normal during navigation):', err);
+                    }
+                } else {
+                    setWasPiPActive(false);
+                }
+            }
+
+            // Update the previous video ID
+            previousVideoIdRef.current = currentVideoId;
+        };
+
+        checkAndSwitchPiP();
+    }, [params.id]);
+
+    // Auto-enter PiP for new video if user was in PiP mode
+    useEffect(() => {
+        const autoEnterPiP = async () => {
+            if (wasPiPActive && videoRef.current && playbackUrl) {
+                // Wait a bit for video to be ready
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                try {
+                    if (videoRef.current && document.pictureInPictureEnabled) {
+                        await videoRef.current.requestPictureInPicture();
+                        console.log('✅ Auto-switched to new video in PiP mode');
+                        setWasPiPActive(false); // Reset flag
+                    }
+                } catch (err) {
+                    console.log('Auto PiP entry failed:', err);
+                    setWasPiPActive(false);
+                }
+            }
+        };
+
+        autoEnterPiP();
+    }, [playbackUrl, wasPiPActive]);
 
     useEffect(() => {
         fetchVideo();
