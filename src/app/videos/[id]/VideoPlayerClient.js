@@ -76,12 +76,43 @@ export default function VideoPlayerClient() {
     // Auto-enter PiP for new video if user was in PiP mode
     useEffect(() => {
         const autoEnterPiP = async () => {
-            if (wasPiPActive && videoRef.current && playbackUrl) {
-                // Wait a bit for video to be ready
-                await new Promise(resolve => setTimeout(resolve, 500));
+            if (wasPiPActive && videoRef.current && playbackUrl && video) {
+                console.log('🎬 Attempting to auto-enter PiP for new video...');
+
+                // Wait for video to be fully loaded
+                const waitForVideoReady = () => {
+                    return new Promise((resolve) => {
+                        if (videoRef.current.readyState >= 3) { // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA
+                            resolve();
+                        } else {
+                            const handleCanPlay = () => {
+                                videoRef.current.removeEventListener('canplay', handleCanPlay);
+                                resolve();
+                            };
+                            videoRef.current.addEventListener('canplay', handleCanPlay);
+
+                            // Timeout after 3 seconds
+                            setTimeout(() => {
+                                videoRef.current.removeEventListener('canplay', handleCanPlay);
+                                resolve();
+                            }, 3000);
+                        }
+                    });
+                };
 
                 try {
+                    // Wait for video to be ready
+                    await waitForVideoReady();
+
+                    // Small additional delay for browser processing
+                    await new Promise(resolve => setTimeout(resolve, 200));
+
                     if (videoRef.current && document.pictureInPictureEnabled) {
+                        // Ensure video is playing before entering PiP
+                        if (videoRef.current.paused) {
+                            await videoRef.current.play();
+                        }
+
                         await videoRef.current.requestPictureInPicture();
                         console.log('✅ Auto-switched to new video in PiP mode');
                         setWasPiPActive(false); // Reset flag
@@ -94,7 +125,7 @@ export default function VideoPlayerClient() {
         };
 
         autoEnterPiP();
-    }, [playbackUrl, wasPiPActive]);
+    }, [playbackUrl, wasPiPActive, video]);
 
     useEffect(() => {
         fetchVideo();

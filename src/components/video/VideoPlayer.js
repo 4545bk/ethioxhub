@@ -94,11 +94,11 @@ const VideoPlayer = ({
         }
     };
 
-    // Enhanced progress bar seek with dragging
-    const handleProgressInteraction = (e) => {
+    // Enhanced progress bar seek with dragging (desktop + mobile)
+    const handleProgressInteraction = (clientX) => {
         if (!duration || !progressBarRef.current) return;
         const rect = progressBarRef.current.getBoundingClientRect();
-        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         if (videoRef.current) {
             videoRef.current.currentTime = percent * duration;
         }
@@ -106,12 +106,12 @@ const VideoPlayer = ({
 
     const handleMouseDown = (e) => {
         setIsDragging(true);
-        handleProgressInteraction(e);
+        handleProgressInteraction(e.clientX);
     };
 
     const handleMouseMove = (e) => {
         if (isDragging) {
-            handleProgressInteraction(e);
+            handleProgressInteraction(e.clientX);
         }
     };
 
@@ -119,13 +119,34 @@ const VideoPlayer = ({
         setIsDragging(false);
     };
 
+    // Touch events for mobile
+    const handleTouchStart = (e) => {
+        setIsDragging(true);
+        const touch = e.touches[0];
+        handleProgressInteraction(touch.clientX);
+    };
+
+    const handleTouchMove = (e) => {
+        if (isDragging && e.touches[0]) {
+            handleProgressInteraction(e.touches[0].clientX);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        setIsDragging(false);
+    };
+
     useEffect(() => {
         if (isDragging) {
             window.addEventListener('mousemove', handleMouseMove);
             window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('touchmove', handleTouchMove);
+            window.addEventListener('touchend', handleTouchEnd);
             return () => {
                 window.removeEventListener('mousemove', handleMouseMove);
                 window.removeEventListener('mouseup', handleMouseUp);
+                window.removeEventListener('touchmove', handleTouchMove);
+                window.removeEventListener('touchend', handleTouchEnd);
             };
         }
     }, [isDragging]);
@@ -162,11 +183,12 @@ const VideoPlayer = ({
                         {/* Enhanced Progress Bar with Dragging */}
                         <div
                             ref={progressBarRef}
-                            className="mb-4 group/progress cursor-pointer"
+                            className="mb-4 group/progress cursor-pointer select-none"
                             onMouseDown={handleMouseDown}
-                            onClick={handleProgressInteraction}
+                            onTouchStart={handleTouchStart}
+                            onClick={(e) => handleProgressInteraction(e.clientX)}
                         >
-                            <div className="relative h-1 bg-white/20 rounded-full hover:h-2 transition-all">
+                            <div className="relative h-1 bg-white/20 rounded-full hover:h-2 active:h-2 transition-all">
                                 {/* Progress */}
                                 <div
                                     className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all"
@@ -174,7 +196,7 @@ const VideoPlayer = ({
                                 />
                                 {/* Thumb */}
                                 <div
-                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 group-active/progress:opacity-100 transition-opacity"
                                     style={{ left: `calc(${progress}% - 6px)` }}
                                 />
                             </div>
