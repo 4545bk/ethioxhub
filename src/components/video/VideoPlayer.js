@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Play, Pause, Volume2, Maximize2, Settings, VolumeX } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Play, Pause, Volume2, Maximize2, Settings, VolumeX, Minimize2, PictureInPicture2 } from "lucide-react";
 
 const VideoPlayer = ({
     videoRef,
@@ -19,6 +19,33 @@ const VideoPlayer = ({
     const [showQualityMenu, setShowQualityMenu] = useState(false);
     const [currentQuality, setCurrentQuality] = useState('Auto');
     const [availableQualities, setAvailableQualities] = useState(['Auto', '1080p', '720p', '480p', '360p']);
+    const [isPiPSupported, setIsPiPSupported] = useState(false);
+    const [isInPiP, setIsInPiP] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const progressBarRef = useRef(null);
+
+    // Check PiP support on mount
+    useEffect(() => {
+        setIsPiPSupported(document.pictureInPictureEnabled);
+    }, []);
+
+    // Monitor PiP state
+    useEffect(() => {
+        if (!videoRef?.current) return;
+
+        const handleEnterPiP = () => setIsInPiP(true);
+        const handleLeavePiP = () => setIsInPiP(false);
+
+        videoRef.current.addEventListener('enterpictureinpicture', handleEnterPiP);
+        videoRef.current.addEventListener('leavepictureinpicture', handleLeavePiP);
+
+        return () => {
+            if (videoRef?.current) {
+                videoRef.current.removeEventListener('enterpictureinpicture', handleEnterPiP);
+                videoRef.current.removeEventListener('leavepictureinpicture', handleLeavePiP);
+            }
+        };
+    }, [videoRef]);
 
     const formatTime = (time) => {
         if (!time || isNaN(time)) return "00:00";
@@ -50,8 +77,58 @@ const VideoPlayer = ({
         } else if (hlsInstance && quality === 'Auto') {
             hlsInstance.currentLevel = -1; // Auto quality
         }
-        // For direct MP4, quality switching is not available
     };
+
+    // Picture-in-Picture toggle
+    const togglePictureInPicture = async () => {
+        if (!videoRef?.current || !isPiPSupported) return;
+
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            } else {
+                await videoRef.current.requestPictureInPicture();
+            }
+        } catch (err) {
+            console.error('PiP error:', err);
+        }
+    };
+
+    // Enhanced progress bar seek with dragging
+    const handleProgressInteraction = (e) => {
+        if (!duration || !progressBarRef.current) return;
+        const rect = progressBarRef.current.getBoundingClientRect();
+        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        if (videoRef.current) {
+            videoRef.current.currentTime = percent * duration;
+        }
+    };
+
+    const handleMouseDown = (e) => {
+        setIsDragging(true);
+        handleProgressInteraction(e);
+    };
+
+    const handleMouseMove = (e) => {
+        if (isDragging) {
+            handleProgressInteraction(e);
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    useEffect(() => {
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            return () => {
+                window.removeEventListener('mousemove', handleMouseMove);
+                window.removeEventListener('mouseup', handleMouseUp);
+            };
+        }
+    }, [isDragging]);
 
     return (
         <div
@@ -66,12 +143,7 @@ const VideoPlayer = ({
                     className="w-full h-full object-contain bg-black"
                     poster={poster}
                     onClick={togglePlay}
-                // Event listeners for logic are in page.js, but visual progress needs 'onTimeUpdate'? 
-                // page.js should pass progress.
-                // If page.js doesn't update progress state rapidly enough, UI is jerky.
-                // page.js typically uses requestAnimationFrame or timeUpdate event.
-                // I will assume page.js handles `onTimeUpdate` on this video element via ref or props if I pass them?
-                // Actually, ref-based listeners in page.js work fine.
+                    playsInline // Important for iOS to prevent auto-fullscreen
                 />
             ) : (
                 <div className="w-full h-full flex items-center justify-center bg-black">
@@ -87,16 +159,14 @@ const VideoPlayer = ({
                 >
                     {/* Bottom Controls */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">
-                        {/* Progress Bar */}
-                        <div className="mb-4 group/progress cursor-pointer" onClick={(e) => {
-                            if (!duration) return;
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                            if (videoRef.current) videoRef.current.currentTime = percent * duration;
-                        }}>
+                        {/* Enhanced Progress Bar with Dragging */}
+                        <div
+                            ref={progressBarRef}
+                            className="mb-4 group/progress cursor-pointer"
+                            onMouseDown={handleMouseDown}
+                            onClick={handleProgressInteraction}
+                        >
                             <div className="relative h-1 bg-white/20 rounded-full hover:h-2 transition-all">
-                                {/* Buffer - optional */}
-                                <div className="absolute top-0 left-0 h-full w-0 bg-white/30 rounded-full" />
                                 {/* Progress */}
                                 <div
                                     className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all"
@@ -144,7 +214,7 @@ const VideoPlayer = ({
                                         {volume === 0 ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
                                     </button>
 
-                                    {/* Volume Slider - appears on hover */}
+                                    {/* Volume Slider */}
                                     <div className="absolute bottom-12 left-1/2 -translate-x-1/2 opacity-0 group-hover/volume:opacity-100 transition-opacity pointer-events-none group-hover/volume:pointer-events-auto">
                                         <div className="bg-black/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-white/10">
                                             <input
@@ -201,8 +271,28 @@ const VideoPlayer = ({
                                     )}
                                 </div>
 
+                                {/* Picture-in-Picture (Mini Player) */}
+                                {isPiPSupported && (
+                                    <button
+                                        onClick={togglePictureInPicture}
+                                        className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+                                        aria-label="Picture-in-Picture"
+                                        title="Mini Player"
+                                    >
+                                        {isInPiP ? (
+                                            <Minimize2 className="w-5 h-5 text-orange-500" />
+                                        ) : (
+                                            <PictureInPicture2 className="w-5 h-5 text-white" />
+                                        )}
+                                    </button>
+                                )}
+
                                 {/* Fullscreen */}
-                                <button onClick={toggleFullscreen} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors">
+                                <button
+                                    onClick={toggleFullscreen}
+                                    className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+                                    aria-label="Fullscreen"
+                                >
                                     <Maximize2 className="w-5 h-5 text-white" />
                                 </button>
                             </div>

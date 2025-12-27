@@ -293,10 +293,46 @@ export default function VideoPlayerClient() {
 
     const toggleFullscreen = () => {
         if (!videoRef.current) return;
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
+
+        // Check if already in fullscreen
+        const isFullscreen = document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement;
+
+        if (isFullscreen) {
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
         } else {
-            videoRef.current.parentElement.requestFullscreen();
+            // Enter fullscreen
+            const container = videoRef.current.parentElement;
+
+            // Try native fullscreen API first (works on desktop and Android)
+            if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if (container.webkitRequestFullscreen) {
+                container.webkitRequestFullscreen();
+            } else if (container.mozRequestFullScreen) {
+                container.mozRequestFullScreen();
+            } else if (container.msRequestFullscreen) {
+                container.msRequestFullscreen();
+            }
+            // iOS Safari specific - fullscreen the video element itself
+            else if (videoRef.current.webkitEnterFullscreen) {
+                videoRef.current.webkitEnterFullscreen();
+            }
+            // iOS Safari older versions
+            else if (videoRef.current.webkitEnterFullScreen) {
+                videoRef.current.webkitEnterFullScreen();
+            }
         }
     };
 
