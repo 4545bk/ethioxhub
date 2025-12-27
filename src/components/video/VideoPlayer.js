@@ -59,50 +59,60 @@ const VideoPlayer = ({
         return `${m}:${s < 10 ? '0' : ''}${s}`;
     };
 
-    // Update preview thumbnail at hover position
+    // Update preview thumbnail at hover position - INSTANT VERSION
     const updatePreview = (seekTime) => {
-        if (!videoRef?.current || !previewCanvasRef?.current || !seekTime) return;
+        if (!videoRef?.current || !previewCanvasRef?.current || seekTime === null || seekTime === undefined) return;
 
-        // Throttle preview updates to every 100ms for performance
-        if (previewUpdateRef.current) {
-            clearTimeout(previewUpdateRef.current);
-        }
+        const canvas = previewCanvasRef.current;
+        const video = videoRef.current;
+        const ctx = canvas.getContext('2d');
 
-        previewUpdateRef.current = setTimeout(() => {
-            const canvas = previewCanvasRef.current;
-            const video = videoRef.current;
-            const ctx = canvas.getContext('2d');
-
-            // Set canvas size (120x68 for 16:9 aspect ratio thumbnail)
+        // Set canvas size once
+        if (canvas.width !== 160) {
             canvas.width = 160;
             canvas.height = 90;
+        }
 
-            // Save current video time
-            const currentTime = video.currentTime;
-            const wasPlaying = !video.paused;
+        // Save current state
+        const currentTime = video.currentTime;
+        const wasPlaying = !video.paused;
 
-            // Temporarily seek to hover position to capture frame
-            video.currentTime = seekTime;
+        // Seek to preview position
+        video.currentTime = seekTime;
 
-            // Wait for seek to complete
-            const captureFrame = () => {
+        // Double requestAnimationFrame for immediate rendering
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
                 try {
-                    // Draw video frame to canvas
+                    // Draw frame immediately
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                    // Restore original playback position
-                    video.currentTime = currentTime;
-                    if (wasPlaying) {
-                        video.play().catch(() => { });
-                    }
+                    // Restore playback position quickly
+                    requestAnimationFrame(() => {
+                        video.currentTime = currentTime;
+                        if (wasPlaying) {
+                            video.play().catch(() => { });
+                        }
+                    });
                 } catch (err) {
-                    console.log('Preview capture failed:', err);
+                    // If immediate draw fails, wait for seeked
+                    const drawFrame = () => {
+                        try {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            video.currentTime = currentTime;
+                            if (wasPlaying) {
+                                video.play().catch(() => { });
+                            }
+                        } catch (e) {
+                            console.log('Preview failed');
+                        }
+                    };
+                    video.addEventListener('seeked', drawFrame, { once: true });
                 }
-            };
-
-            // Use seeked event for better timing
-            video.addEventListener('seeked', captureFrame, { once: true });
-        }, 100);
+            });
+        });
     };
 
     const handleQualityChange = (quality) => {
