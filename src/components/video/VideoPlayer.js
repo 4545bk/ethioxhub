@@ -22,7 +22,12 @@ const VideoPlayer = ({
     const [isPiPSupported, setIsPiPSupported] = useState(false);
     const [isInPiP, setIsInPiP] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [isHoveringProgress, setIsHoveringProgress] = useState(false);
+    const [hoverPosition, setHoverPosition] = useState(0); // 0-100 percent
+    const [hoverTime, setHoverTime] = useState(0); // seconds
     const progressBarRef = useRef(null);
+    const previewCanvasRef = useRef(null);
+    const previewUpdateRef = useRef(null); // For throttling preview updates
 
     // Check PiP support on mount
     useEffect(() => {
@@ -52,6 +57,52 @@ const VideoPlayer = ({
         const m = Math.floor(time / 60);
         const s = Math.floor(time % 60);
         return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
+    // Update preview thumbnail at hover position
+    const updatePreview = (seekTime) => {
+        if (!videoRef?.current || !previewCanvasRef?.current || !seekTime) return;
+
+        // Throttle preview updates to every 100ms for performance
+        if (previewUpdateRef.current) {
+            clearTimeout(previewUpdateRef.current);
+        }
+
+        previewUpdateRef.current = setTimeout(() => {
+            const canvas = previewCanvasRef.current;
+            const video = videoRef.current;
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size (120x68 for 16:9 aspect ratio thumbnail)
+            canvas.width = 160;
+            canvas.height = 90;
+
+            // Save current video time
+            const currentTime = video.currentTime;
+            const wasPlaying = !video.paused;
+
+            // Temporarily seek to hover position to capture frame
+            video.currentTime = seekTime;
+
+            // Wait for seek to complete
+            const captureFrame = () => {
+                try {
+                    // Draw video frame to canvas
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Restore original playback position
+                    video.currentTime = currentTime;
+                    if (wasPlaying) {
+                        video.play().catch(() => { });
+                    }
+                } catch (err) {
+                    console.log('Preview capture failed:', err);
+                }
+            };
+
+            // Use seeked event for better timing
+            video.addEventListener('seeked', captureFrame, { once: true });
+        }, 100);
     };
 
     const handleQualityChange = (quality) => {
@@ -95,17 +146,28 @@ const VideoPlayer = ({
     };
 
     // Enhanced progress bar seek with dragging (desktop + mobile)
-    const handleProgressInteraction = (clientX) => {
+    const handleProgressInteraction = (clientX, shouldSeek = true) => {
         if (!duration || !progressBarRef.current) return;
         const rect = progressBarRef.current.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-        if (videoRef.current) {
-            videoRef.current.currentTime = percent * duration;
+        const seekTime = percent * duration;
+
+        // Update hover position for preview
+        setHoverPosition(percent * 100);
+        setHoverTime(seekTime);
+
+        // Update preview thumbnail
+        updatePreview(seekTime);
+
+        // Actually seek the video if requested
+        if (shouldSeek && videoRef.current) {
+            videoRef.current.currentTime = seekTime;
         }
     };
 
     const handleMouseDown = (e) => {
         setIsDragging(true);
+        setIsHoveringProgress(true);
         handleProgressInteraction(e.clientX);
     };
 
@@ -119,9 +181,24 @@ const VideoPlayer = ({
         setIsDragging(false);
     };
 
+    // Handle hover over progress bar (without dragging)
+    const handleProgressHover = (e) => {
+        if (!isDragging) {
+            setIsHoveringProgress(true);
+            handleProgressInteraction(e.clientX, false); // Update preview but don't seek
+        }
+    };
+
+    const handleProgressLeave = () => {
+        if (!isDragging) {
+            setIsHoveringProgress(false);
+        }
+    };
+
     // Touch events for mobile
     const handleTouchStart = (e) => {
         setIsDragging(true);
+        setIsHoveringProgress(true);
         const touch = e.touches[0];
         handleProgressInteraction(touch.clientX);
     };
@@ -134,6 +211,7 @@ const VideoPlayer = ({
 
     const handleTouchEnd = () => {
         setIsDragging(false);
+        setIsHoveringProgress(false);
     };
 
     useEffect(() => {
@@ -180,14 +258,41 @@ const VideoPlayer = ({
                 >
                     {/* Bottom Controls */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">
-                        {/* Enhanced Progress Bar with Dragging */}
+                        {/* Enhanced Progress Bar with Dragging & Preview */}
                         <div
                             ref={progressBarRef}
-                            className="mb-4 group/progress cursor-pointer select-none"
+                            className="mb-4 group/progress cursor-pointer select-none relative"
                             onMouseDown={handleMouseDown}
+                            onMouseMove={handleProgressHover}
+                            onMouseLeave={handleProgressLeave}
                             onTouchStart={handleTouchStart}
                             onClick={(e) => handleProgressInteraction(e.clientX)}
                         >
+                            {/* Preview Tooltip */}
+                            {isHoveringProgress && duration > 0 && (
+                                <div
+                                    className="absolute bottom-6 -translate-x-1/2 pointer-events-none z-50 animate-fadeIn"
+                                    style={{ left: `${hoverPosition}%` }}
+                                >
+                                    <div className="bg-black/95 backdrop-blur-sm rounded-lg overflow-hidden shadow-2xl border border-white/20">
+                                        {/* Video Preview Canvas */}
+                                        <canvas
+                                            ref={previewCanvasRef}
+                                            className="block"
+                                            style={{ width: '160px', height: '90px' }}
+                                        />
+                                        {/* Timestamp */}
+                                        <div className="px-2 py-1 text-center">
+                                            <span className="text-white text-xs font-bold">
+                                                {formatTime(hoverTime)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {/* Pointer Arrow */}
+                                    <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/95" />
+                                </div>
+                            )}
+
                             <div className="relative h-1 bg-white/20 rounded-full hover:h-2 active:h-2 transition-all">
                                 {/* Progress */}
                                 <div
