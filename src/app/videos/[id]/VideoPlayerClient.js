@@ -39,6 +39,7 @@ export default function VideoPlayerClient() {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
+    const [isBuffering, setIsBuffering] = useState(false);
     const [wasPiPActive, setWasPiPActive] = useState(false); // Track if PiP was active before navigation
     const previousVideoIdRef = useRef(null); // Track previous video ID
 
@@ -172,12 +173,28 @@ export default function VideoPlayerClient() {
         const handleVolumeChange = () => {
             setVolume(videoElement.volume);
         };
+        const handleWaiting = () => {
+            setIsBuffering(true); // Show loading when buffering
+        };
+        const handleCanPlay = () => {
+            setIsBuffering(false); // Hide loading when ready
+        };
+        const handleSeeking = () => {
+            setIsBuffering(true); // Show loading when seeking
+        };
+        const handleSeeked = () => {
+            setIsBuffering(false); // Hide loading after seek
+        };
 
         videoElement.addEventListener('play', handlePlay);
         videoElement.addEventListener('pause', handlePause);
         videoElement.addEventListener('timeupdate', handleTimeUpdate);
         videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
         videoElement.addEventListener('volumechange', handleVolumeChange);
+        videoElement.addEventListener('waiting', handleWaiting);
+        videoElement.addEventListener('canplay', handleCanPlay);
+        videoElement.addEventListener('seeking', handleSeeking);
+        videoElement.addEventListener('seeked', handleSeeked);
 
         return () => {
             videoElement.removeEventListener('play', handlePlay);
@@ -185,6 +202,10 @@ export default function VideoPlayerClient() {
             videoElement.removeEventListener('timeupdate', handleTimeUpdate);
             videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
             videoElement.removeEventListener('volumechange', handleVolumeChange);
+            videoElement.removeEventListener('waiting', handleWaiting);
+            videoElement.removeEventListener('canplay', handleCanPlay);
+            videoElement.removeEventListener('seeking', handleSeeking);
+            videoElement.removeEventListener('seeked', handleSeeked);
         };
     }, [playbackUrl]);
 
@@ -262,7 +283,10 @@ export default function VideoPlayerClient() {
 
                 // Check if user has access (purchased, subscribed, free, or admin)
                 if (data.canAccess && data.video.videoUrl) {
-                    const optimizedUrl = optimizeCloudinaryVideoUrl(data.video.videoUrl);
+                    const optimizedUrl = optimizeCloudinaryVideoUrl(data.video.videoUrl, {
+                        duration: data.video.duration || 0,
+                        mobile: /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+                    });
 
                     // Allow free videos to play without login (freemium strategy)
                     if (!data.video.isPaid) {
@@ -276,7 +300,10 @@ export default function VideoPlayerClient() {
                     if (!authLoading) setShowPurchaseModal(true);
                 } else if (!data.video.isPaid && data.video.videoUrl) {
                     // Free video - allow access without login
-                    setPlaybackUrl(optimizeCloudinaryVideoUrl(data.video.videoUrl));
+                    setPlaybackUrl(optimizeCloudinaryVideoUrl(data.video.videoUrl, {
+                        duration: data.video.duration || 0,
+                        mobile: /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+                    }));
                 }
 
                 // Store userId for comments/likes
@@ -471,6 +498,7 @@ export default function VideoPlayerClient() {
                                 playbackUrl={playbackUrl}
                                 poster={video.thumbnailUrl}
                                 isPlaying={isPlaying}
+                                isBuffering={isBuffering}
                                 togglePlay={togglePlay}
                                 progress={progress}
                                 currentTime={currentTime}

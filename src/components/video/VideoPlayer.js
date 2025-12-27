@@ -6,6 +6,7 @@ const VideoPlayer = ({
     playbackUrl,
     poster,
     isPlaying,
+    isBuffering = false,
     togglePlay,
     progress, // 0-100
     currentTime,
@@ -257,6 +258,16 @@ const VideoPlayer = ({
             ) : (
                 <div className="w-full h-full flex items-center justify-center bg-black">
                     <p className="text-white">Video Locked</p>
+                </div>
+            )}
+
+            {/* Buffering/Loading Spinner */}
+            {isBuffering && playbackUrl && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm pointer-events-none z-40">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+                        <p className="text-white text-sm font-medium">Loading...</p>
+                    </div>
                 </div>
             )}
 
